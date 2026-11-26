@@ -25,7 +25,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 const ROOT = __dirname;
-const DOCS = path.join(ROOT, "docs");
+const WEB = path.join(ROOT, "web");
 const ENV_FILE = path.join(ROOT, ".env");
 
 const PORT = Number(process.env.PORT || 8000);
@@ -91,7 +91,7 @@ async function proxyPost(req, res, upstreamPath) {
   res.end(text);
 }
 
-// The GitHub Pages URL has a /decision-model-examples/ prefix, so people
+// The old hosted URL had a /decision-model-examples/ prefix, so people
 // (and saved bookmarks) ask for it here too — accept it as an alias of /.
 const PREFIX = "/decision-model-examples";
 function stripPrefix(p) {
@@ -103,8 +103,8 @@ function serveStatic(req, res) {
   try { urlPath = stripPrefix(decodeURIComponent(new URL(req.url, "http://localhost").pathname)); }
   catch { return sendJson(res, 400, { error: "Bad URL" }); }
   if (urlPath === "/") urlPath = "/index.html";
-  const file = path.normalize(path.join(DOCS, urlPath));
-  if (!file.startsWith(DOCS + path.sep)) return sendJson(res, 403, { error: "Forbidden" });
+  const file = path.normalize(path.join(WEB, urlPath));
+  if (!file.startsWith(WEB + path.sep)) return sendJson(res, 403, { error: "Forbidden" });
   fs.readFile(file, (err, data) => {
     if (err) return sendJson(res, 404, { error: "Not found" });
     res.writeHead(200, { "Content-Type": MIME[path.extname(file)] || "application/octet-stream" });

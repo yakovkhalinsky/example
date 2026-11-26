@@ -4,13 +4,14 @@ Worked examples for **Jev decision models** on **Ollama Cloud** — models
 that don't generate text, but score typed questions (pick an option, yes/no,
 rate on a scale) in a single forward pass and return probabilities.
 
+Nothing here is hosted: check the repo out and run it yourself.
+
 ## What's in this repo
 
 ```
 python/    The five examples in Python (stdlib only) + the jev.py client
-docs/      The same five examples as a web page (GitHub Pages serves it
-           from this folder — that's why it's called docs/)
-server.js  Node server: serves docs/ and proxies the API calls, adding
+web/       The same five examples as a web page (index.html, app.js, style.css)
+server.js  Node server: serves web/ and proxies the API calls, adding
            the Ollama Cloud key server-side (see "Web demo" below)
 .env.example   Copy to .env and add your OLLAMA_API_KEY (git-ignored)
 ```
@@ -27,23 +28,16 @@ Full guide: **[python/README.md](python/README.md)**
 
 ## Web demo
 
-The same five examples as a web page:
-**https://yakov.khalinsky.com/decision-model-examples/** (source in
-[`docs/`](docs/)).
-
-Browsers can't call Ollama Cloud directly — its API doesn't answer
-browser preflight (CORS) requests — so the hosted page is best run
-against an Ollama daemon: serve `docs/` locally, choose *Custom…* as
-the endpoint and point it at your daemon, model `clef:cloud`, no key
-needed (daemons accept browser calls from localhost origins).
-
-**Or run the Node server** and use Ollama Cloud through it — the
-browser talks to the server on the same origin, the server adds the
-key, and the key never reaches the browser:
+Check the repo out, then run the Node server — the browser talks to
+the server on the same origin, the server adds the key from `.env`,
+and the key never reaches the browser. (This indirection is needed
+because browsers can't call Ollama Cloud directly: its API doesn't
+answer browser preflight/CORS requests.)
 
 ```bash
 cp .env.example .env   # put OLLAMA_API_KEY=... in .env
 node server.js         # port 8000; editing .env needs no restart
+# open http://localhost:8000
 ```
 
 In server mode the page's Connection section is hidden entirely
@@ -54,6 +48,10 @@ normal LLMs. The single *Run decision* button on every example runs
 the same state and questions through both models, side by side, with
 the whole input, timing and token counts for each. No dependencies;
 Node 18+.
+
+Alternatively, serve `web/` statically and run it against a local
+Ollama daemon (choose *Custom…* and point it at the daemon; no key
+needed — daemons accept browser calls from localhost origins).
 
 ## Licence
 
