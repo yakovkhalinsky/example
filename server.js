@@ -126,7 +126,7 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(PORT, HOST, () => {
-  console.log(`Decision-model demo: http://${HOST === "0.0.0.0" ? "localhost" : HOST}:${PORT}`);
+  console.log(`Decision-model demo: http://${HOST}:${PORT} (bound to ${HOST})`);
   console.log(`  upstream: ${UPSTREAM}  API key configured: ${Boolean(config("OLLAMA_API_KEY"))}`);
   console.log(`  key source: environment or ${ENV_FILE} (re-read per request)`);
 });
