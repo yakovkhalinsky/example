@@ -5,7 +5,7 @@
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 body {
-  margin: 0 auto; max-width: 860px; padding: 24px 16px 64px;
+  margin: 0; max-width: none; padding: 24px 24px 64px;
   background: var(--bg); color: var(--text);
   font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
 }
