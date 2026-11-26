@@ -37,6 +37,7 @@
   <p class="note">Posts are saved (in your browser's local storage) and rendered
   into the page. In vulnerable mode the rendering uses <code>innerHTML</code>,
   so markup in a post becomes live page content — for every later visit, too.</p>
+  <p class="note target-note">👉 Payloads for this panel go in the <strong>Comment</strong> field below.</p>
   <div class="grid">
     <label>Your name <input id="gbName" type="text" value="Visitor"></label>
     <label>Comment <input id="gbComment" type="text" placeholder="Say something nice… or don't"></label>
@@ -60,6 +61,7 @@
   into HTML, the avatar URL goes into an <code>&lt;img src="…"&gt;</code>
   attribute, and the website goes into an <code>&lt;a href="…"&gt;</code> —
   three different injection contexts, three different payload shapes.</p>
+  <p class="note target-note">👉 Payloads for this panel go in the <strong>Bio</strong>, <strong>Avatar image URL</strong> or <strong>Website</strong> field — each payload card says which.</p>
   <div class="grid">
     <label>Display name <input id="pfName" type="text" value="Ada"></label>
     <label>Bio <input id="pfBio" type="text" value="I break things so others don't have to."></label>
@@ -85,6 +87,7 @@
   says. That's the classic reflected pattern behind phishing links: the
   payload rides in the URL and executes in the victim's browser on a trusted
   page. Type a name (or a payload), build the link, and open it.</p>
+  <p class="note target-note">👉 Payloads for this panel go in the <strong>Name in the URL</strong> field below, then open the test link.</p>
   <div id="greeting" class="greeting">Welcome!</div>
   <div class="grid">
     <label>Name in the URL <input id="reflName" type="text" value="Ada"></label>
@@ -101,11 +104,15 @@
 
 <section class="card" id="library">
   <h2>Payload library</h2>
-  <p class="note">Classic test strings (OWASP-style). <em>Try it</em> loads the
-  payload into its target panel and triggers it. Most call
-  <code>proof('…')</code> so the detector can confirm execution;
-  <em>Copy</em> gives you the raw string to paste anywhere. In Safe mode the
-  same payloads should render as harmless text.</p>
+  <p class="note"><strong>How it works:</strong> 1) Pick a payload below.
+  2) Either press <em>Load it for me</em> — it fills the right field and
+  triggers it — or copy the string (click it, or use <em>Copy payload</em>)
+  and paste it into the field named in the card's
+  <span class="paste-target-inline">Paste into:</span> line.
+  <em>Show me where</em> scrolls to that field and pulses it.
+  3) Watch the Detector at the top: payloads call <code>proof('…')</code>
+  when they execute. In Safe mode the same payloads should render as
+  harmless text.</p>
   <div id="payloadLib"></div>
 </section>
 

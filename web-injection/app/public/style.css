@@ -84,13 +84,27 @@ code { color: var(--text); }
   border: 1px solid var(--border); border-radius: 8px; padding: 12px;
   margin: 10px 0; background: var(--bg);
 }
+.paste-target, .paste-target-inline {
+  color: var(--accent); font-weight: 600; font-size: .92rem;
+}
 .payload-code {
   display: block; margin: 8px 0; padding: 8px 10px; border-radius: 6px;
   background: var(--card); border: 1px solid var(--border);
   font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .88rem;
   white-space: pre-wrap; word-break: break-all;
+  cursor: pointer;
 }
+.payload-code:hover { border-color: var(--accent); }
 .payload p { margin: 4px 0 8px; }
+.target-note { color: var(--accent); }
+
+/* Pulsing highlight for "this is the field" moments */
+@keyframes flashPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(240, 163, 94, 0); }
+  25%, 75% { box-shadow: 0 0 0 4px rgba(240, 163, 94, .85); }
+  50% { box-shadow: 0 0 0 2px rgba(240, 163, 94, .4); }
+}
+.flash { animation: flashPulse .65s ease-in-out 4; border-color: var(--accent) !important; }
 
 .fix { margin-top: 14px; font-size: .92rem; color: var(--muted); }
 .fix summary { cursor: pointer; color: var(--accent2); }

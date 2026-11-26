@@ -85,7 +85,28 @@ updateReflLink();
 
 // --- Payload library ---
 
+// Where each payload goes, in plain words: the exact panel and field
+// to paste it into, and what to do after pasting.
+const TARGET_INFO = {
+  guestbook: { field: () => els.gbComment, where: "Guestbook panel → the “Comment” field", after: "then click “Post comment”" },
+  bio: { field: () => els.pfBio, where: "Profile preview panel → the “Bio” field", after: "the preview card updates as you type" },
+  avatar: { field: () => els.pfAvatar, where: "Profile preview panel → the “Avatar image URL” field", after: "the preview card updates as you type" },
+  url: { field: () => els.pfUrl, where: "Profile preview panel → the “Website” field", after: "then click the “Website” link in the preview card" },
+  reflected: { field: () => els.reflName, where: "Reflected greeting panel → the “Name in the URL” field", after: "then click “Open test link”" },
+};
+
+// Pulse the target field so the eye lands exactly where the payload
+// belongs.
+function flashField(el) {
+  if (!el) return;
+  el.classList.remove("flash");
+  void el.offsetWidth; // restart the animation if it was already flashing
+  el.classList.add("flash");
+  setTimeout(() => el.classList.remove("flash"), 2600);
+}
+
 function tryPayload(p) {
+  const info = TARGET_INFO[p.target];
   if (p.target === "guestbook") {
     els.gbComment.value = p.payload;
     els.gbPost.click();
@@ -106,7 +127,16 @@ function tryPayload(p) {
     els.reflName.value = p.payload;
     updateReflLink();
     location.href = els.reflLink.href;
+    return; // page is navigating away; nothing to flash
   }
+  setTimeout(() => flashField(info.field()), 350);
+}
+
+async function copyText(text, btn) {
+  const original = btn.textContent;
+  try { await navigator.clipboard.writeText(text); btn.textContent = "Copied!"; }
+  catch (_) { btn.textContent = "Copy failed"; }
+  setTimeout(() => { btn.textContent = original; }, 1200);
 }
 
 function buildLibrary() {
@@ -120,33 +150,43 @@ function buildLibrary() {
     h.textContent = group;
     els.payloadLib.appendChild(h);
     for (const p of items) {
+      const info = TARGET_INFO[p.target];
       const card = document.createElement("div");
       card.className = "payload";
       const title = document.createElement("strong");
       title.textContent = p.title;
+      const where = document.createElement("p");
+      where.className = "paste-target";
+      where.textContent = `Paste into: ${info.where} — ${info.after}.`;
       const code = document.createElement("code");
       code.className = "payload-code";
       code.textContent = p.payload;
+      code.title = "Click to copy this payload";
+      code.addEventListener("click", () => copyText(p.payload, code));
       const expect = document.createElement("p");
       expect.className = "note";
       expect.textContent = p.expect;
       const tryBtn = document.createElement("button");
       tryBtn.type = "button";
-      tryBtn.textContent = "Try it";
+      tryBtn.textContent = "Load it for me";
       tryBtn.addEventListener("click", () => tryPayload(p));
       const copyBtn = document.createElement("button");
       copyBtn.type = "button";
       copyBtn.className = "secondary";
-      copyBtn.textContent = "Copy";
-      copyBtn.addEventListener("click", async () => {
-        try { await navigator.clipboard.writeText(p.payload); copyBtn.textContent = "Copied"; }
-        catch (_) { copyBtn.textContent = "Copy failed"; }
-        setTimeout(() => { copyBtn.textContent = "Copy"; }, 1200);
+      copyBtn.textContent = "Copy payload";
+      copyBtn.addEventListener("click", () => copyText(p.payload, copyBtn));
+      const showBtn = document.createElement("button");
+      showBtn.type = "button";
+      showBtn.className = "secondary";
+      showBtn.textContent = "Show me where";
+      showBtn.addEventListener("click", () => {
+        info.field().scrollIntoView({ behavior: "smooth", block: "center" });
+        setTimeout(() => flashField(info.field()), 350);
       });
       const classic = document.createElement("span");
       classic.className = "note";
       classic.textContent = ` classic form: ${p.classic}`;
-      card.append(title, code, expect, tryBtn, copyBtn, classic);
+      card.append(title, where, code, expect, tryBtn, copyBtn, showBtn, classic);
       els.payloadLib.appendChild(card);
     }
   }
