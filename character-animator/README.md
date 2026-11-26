@@ -19,7 +19,9 @@ app/
     js/            Browser modules — main (scene/UI/timeline),
                    rig (skeleton + skinned mesh), presets
     vendor/        three.js r160 (three.module.js, OrbitControls,
-                   TransformControls), pinned and vendored
+                   TransformControls, RoomEnvironment), pinned and
+                   vendored
+screenshots/       The four skins, mid-Wave
 ```
 
 ## Run it
@@ -60,6 +62,26 @@ Blender's core character workflow, shrunk to one page:
   *Robot* (polished metal), *Ghost* (translucent — the skeleton
   shows through) and *Toon* (flat cel shading). The choice persists
   in local storage.
+
+## Screenshots
+
+All four skins, mid-*Wave* (skeleton helper on, gizmo hidden):
+
+**Mannequin** — wood
+
+![Mannequin skin](screenshots/skin-mannequin.png)
+
+**Robot** — polished metal
+
+![Robot skin](screenshots/skin-robot.png)
+
+**Ghost** — translucent
+
+![Ghost skin](screenshots/skin-ghost.png)
+
+**Toon** — cel shading
+
+![Toon skin](screenshots/skin-toon.png)
 - **Presets** — *Wave*, *Idle sway* and *Walk cycle* load ready-made
   keyframes so the character moves the moment the page opens.
 - **Save / load** — export the timeline as JSON, import it back, or

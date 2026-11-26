@@ -7,6 +7,7 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { TransformControls } from "three/addons/controls/TransformControls.js";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { buildRig, BONE_DEFS } from "./rig.js";
 import { PRESETS } from "./presets.js";
 
@@ -23,6 +24,10 @@ container.appendChild(renderer.domElement);
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x11161d);
 scene.fog = new THREE.Fog(0x11161d, 8, 20);
+// A room environment gives metals something to reflect (the Robot
+// skin is near-black without one).
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
 
 const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
 camera.position.set(2.4, 1.7, 3.2);
@@ -442,7 +447,7 @@ tick();
 
 // Hooks for automated checks and curious consoles.
 window.__animator = {
-  rig, anim, selectBone, setTime, loadPreset, resetPose, applySkin,
+  rig, anim, gizmo, selectBone, setTime, loadPreset, resetPose, applySkin,
   get currentSkin() { return currentSkin; },
   boneCount: rig.boneList.length,
   vertexCount: rig.mesh.geometry.getAttribute("position").count,
