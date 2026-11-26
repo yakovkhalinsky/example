@@ -1,0 +1,1 @@
+{"description":"Web Injection Lab: a deliberately vulnerable page with a test UI for classic script-injection (XSS) strings, plus a safe mode showing the fixes. Local/private use only.","engines":{"node":">=18"},"name":"web-injection-app","private":true,"scripts":{"start":"node server.js"},"version":"1.0.0"}

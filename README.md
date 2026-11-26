@@ -9,6 +9,10 @@ is hosted: check the repo out and run what you want yourself.
   models on Ollama Cloud: five worked examples as a web page, with a
   small Node server that proxies the API calls so the key stays
   server-side. See its README for how to run it.
+- **[web-injection/](web-injection/)** — a deliberately vulnerable web
+  page (stored, reflected and attribute/URL script injection) with a
+  payload library and detector UI for testing classic XSS strings,
+  plus a Safe mode showing the fixes. Local/private use only.
 
 More example sets will land here as their own folders.
 

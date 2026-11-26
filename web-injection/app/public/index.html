@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Web Injection Lab — a deliberately vulnerable page</title>
+<meta name="description" content="A deliberately vulnerable web page with a test UI for classic script-injection (XSS) strings, and a safe mode that shows the fixes.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <h1>Web Injection Lab</h1>
+  <p class="lede">This page is <strong>deliberately vulnerable</strong> to script
+  injection (XSS). Every panel below takes user input and renders it the unsafe
+  way, so you can try classic injection strings against your own browser and
+  watch them fire — then flip on <em>Safe mode</em> and watch the same strings
+  go inert. Run it locally or on a private network only.</p>
+</header>
+
+<section class="card detector" id="detectorCard">
+  <div class="detector-head">
+    <h2>Detector</h2>
+    <span class="detector-status" id="detectorStatus">No injection yet</span>
+  </div>
+  <p class="note">Payloads in the library call <code>proof('…')</code> when they
+  execute. If one fires, it lands here — no guessing whether it worked.</p>
+  <ul class="proof-log" id="proofLog"></ul>
+  <div class="row">
+    <label class="toggle"><input type="checkbox" id="safeMode"> Safe mode (patched) — render everything the safe way</label>
+    <button id="resetLab" type="button" class="secondary">Reset lab</button>
+  </div>
+</section>
+
+<section class="card" id="guestbook">
+  <h2>1. Guestbook — stored injection</h2>
+  <p class="note">Posts are saved (in your browser's local storage) and rendered
+  into the page. In vulnerable mode the rendering uses <code>innerHTML</code>,
+  so markup in a post becomes live page content — for every later visit, too.</p>
+  <div class="grid">
+    <label>Your name <input id="gbName" type="text" value="Visitor"></label>
+    <label>Comment <input id="gbComment" type="text" placeholder="Say something nice… or don't"></label>
+  </div>
+  <button id="gbPost" type="button">Post comment</button>
+  <div id="gbList" class="gb-list"></div>
+  <details class="fix"><summary>Why it works / the fix</summary>
+    <p>The app builds HTML by string concatenation and assigns it to
+    <code>innerHTML</code>, so the browser parses attacker text as markup.
+    Event-handler attributes (<code>onerror</code>, <code>onload</code>…)
+    execute; a <code>&lt;script&gt;</code> element inserted this way does
+    <em>not</em> run — that's why the library's script-tag payload is the
+    control case. <strong>Fix:</strong> insert text with
+    <code>textContent</code> (or escape output), so input is data, never markup.</p>
+  </details>
+</section>
+
+<section class="card" id="profile">
+  <h2>2. Profile preview — HTML, attribute and URL injection</h2>
+  <p class="note">A “live preview” card built from four fields. Name and bio go
+  into HTML, the avatar URL goes into an <code>&lt;img src="…"&gt;</code>
+  attribute, and the website goes into an <code>&lt;a href="…"&gt;</code> —
+  three different injection contexts, three different payload shapes.</p>
+  <div class="grid">
+    <label>Display name <input id="pfName" type="text" value="Ada"></label>
+    <label>Bio <input id="pfBio" type="text" value="I break things so others don't have to."></label>
+    <label>Avatar image URL <input id="pfAvatar" type="text" value="https://example.com/ada.png"></label>
+    <label>Website <input id="pfUrl" type="text" value="https://example.com"></label>
+  </div>
+  <div id="pfCard" class="pf-card"></div>
+  <details class="fix"><summary>Why it works / the fix</summary>
+    <p>Same <code>innerHTML</code> mistake, more contexts: a quote breaks out
+    of the avatar attribute (<code>x" onerror="…</code>), and a
+    <code>javascript:</code> website URL turns the link itself into code that
+    runs on click. <strong>Fix:</strong> build nodes with DOM APIs and
+    <code>textContent</code>; set attributes with <code>setAttribute</code>
+    (values can't break out); and allowlist link protocols
+    (<code>http:</code>/<code>https:</code> only) — <code>setAttribute</code>
+    alone does <em>not</em> make a <code>javascript:</code> href safe.</p>
+  </details>
+</section>
+
+<section class="card" id="reflected">
+  <h2>3. Reflected injection — the greeting</h2>
+  <p class="note">The page greets whoever the <code>?name=</code> URL parameter
+  says. That's the classic reflected pattern behind phishing links: the
+  payload rides in the URL and executes in the victim's browser on a trusted
+  page. Type a name (or a payload), build the link, and open it.</p>
+  <div id="greeting" class="greeting">Welcome!</div>
+  <div class="grid">
+    <label>Name in the URL <input id="reflName" type="text" value="Ada"></label>
+  </div>
+  <p class="note">Test link: <a id="reflLink" href="#">(building…)</a></p>
+  <button id="reflGo" type="button">Open test link</button>
+  <details class="fix"><summary>Why it works / the fix</summary>
+    <p>The greeting is filled with <code>innerHTML</code> straight from the
+    query string — no server round-trip needed for DOM-based reflection.
+    <strong>Fix:</strong> same rule: <code>textContent</code> for text, always,
+    no matter where the string came from.</p>
+  </details>
+</section>
+
+<section class="card" id="library">
+  <h2>Payload library</h2>
+  <p class="note">Classic test strings (OWASP-style). <em>Try it</em> loads the
+  payload into its target panel and triggers it. Most call
+  <code>proof('…')</code> so the detector can confirm execution;
+  <em>Copy</em> gives you the raw string to paste anywhere. In Safe mode the
+  same payloads should render as harmless text.</p>
+  <div id="payloadLib"></div>
+</section>
+
+<footer>
+  <p>Web Injection Lab — an educational demo in the <code>example</code> repo.
+  Deliberately vulnerable: never deploy it publicly. Payloads only ever run in
+  your own browser, against this page.</p>
+</footer>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
