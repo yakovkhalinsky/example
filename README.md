@@ -1,4 +1,4 @@
-# Examples
+# Decision Model Examples
 
 Worked examples for **Jev decision models** on **Ollama Cloud** — models
 that don't generate text, but score typed questions (pick an option, yes/no,
