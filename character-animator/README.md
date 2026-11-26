@@ -17,11 +17,12 @@ app/
     index.html
     style.css
     js/            Browser modules — main (scene/UI/timeline),
-                   rig (skeleton + skinned mesh), presets
+                   rig (skeleton + skinned mesh), presets, outfits
+                   (realistic clothing skins with procedural textures)
     vendor/        three.js r160 (three.module.js, OrbitControls,
                    TransformControls, RoomEnvironment), pinned and
                    vendored
-screenshots/       The four skins, mid-Wave
+screenshots/       The four outfits, mid-Wave
 ```
 
 ## Run it
@@ -59,30 +60,33 @@ Blender's core character workflow, shrunk to one page:
   *Key pose at current time*. Playback interpolates between keys
   with quaternion slerp, with loop on/off, clickable keyframe
   markers, and per-key delete.
-- **Skins** — one mesh, four materials: *Mannequin* (wood),
-  *Robot* (polished metal), *Ghost* (translucent — the skeleton
-  shows through) and *Toon* (flat cel shading). The choice persists
-  in local storage.
+- **Skins** — realistic outfits over the mesh's clothing regions
+  (skin, top, bottom, shoes, hair — one material group each, with
+  procedural canvas textures: skin mottling, fabric weave, denim
+  twill). *Casual* (tee, jeans, sneakers), *Business* (charcoal suit,
+  polished shoes), *Sport* (singlet and shorts — bare arms and lower
+  legs), *Summer* (light tee, khaki shorts). The choice persists in
+  local storage.
 
 ## Screenshots
 
-All four skins, mid-*Wave* (skeleton helper on, gizmo hidden):
+All four outfits, mid-*Wave* (skeleton helper on, gizmo hidden):
 
-**Mannequin** — wood
+**Casual** — tee, jeans, sneakers
 
-![Mannequin skin](screenshots/skin-mannequin.png)
+![Casual outfit](screenshots/skin-casual.png)
 
-**Robot** — polished metal
+**Business** — charcoal suit
 
-![Robot skin](screenshots/skin-robot.png)
+![Business outfit](screenshots/skin-business.png)
 
-**Ghost** — translucent
+**Sport** — singlet and shorts
 
-![Ghost skin](screenshots/skin-ghost.png)
+![Sport outfit](screenshots/skin-sport.png)
 
-**Toon** — cel shading
+**Summer** — light tee, khaki shorts
 
-![Toon skin](screenshots/skin-toon.png)
+![Summer outfit](screenshots/skin-summer.png)
 - **Presets** — *Wave*, *Idle sway* and *Walk cycle* load ready-made
   keyframes so the character moves the moment the page opens.
 - **Save / load** — export the timeline as JSON, import it back, or

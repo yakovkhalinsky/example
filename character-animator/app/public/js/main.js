@@ -8,8 +8,9 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { TransformControls } from "three/addons/controls/TransformControls.js";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
-import { buildRig, BONE_DEFS } from "./rig.js";
+import { buildRig, BONE_DEFS, REGION_INDEX } from "./rig.js";
 import { PRESETS } from "./presets.js";
+import { OUTFITS, buildOutfitMaterials, disposeMaterials } from "./outfits.js";
 
 const $ = (id) => document.getElementById(id);
 const status = (msg) => { $("status").textContent = msg; };
@@ -72,38 +73,35 @@ wireMesh.frustumCulled = false;
 wireMesh.visible = false;
 scene.add(wireMesh);
 
-// ---------- skins ----------
-// Same mesh, same weights — a skin is just a material. The choice
-// persists in local storage. The weights view temporarily swaps the
-// material out and restores the current skin afterwards.
-function toonGradient() {
-  const tex = new THREE.DataTexture(new Uint8Array([90, 150, 210, 255]), 4, 1, THREE.RedFormat);
-  tex.minFilter = tex.magFilter = THREE.NearestFilter;
-  tex.needsUpdate = true;
-  return tex;
-}
-const SKINS = {
-  mannequin: () => new THREE.MeshStandardMaterial({ color: 0xc9a06c, roughness: 0.8, metalness: 0.0 }),
-  robot:     () => new THREE.MeshStandardMaterial({ color: 0xb9c2cf, roughness: 0.28, metalness: 0.9 }),
-  ghost:     () => new THREE.MeshStandardMaterial({ color: 0xcfe8ff, roughness: 0.15, metalness: 0.0, transparent: true, opacity: 0.38, depthWrite: false, side: THREE.DoubleSide }),
-  toon:      () => new THREE.MeshToonMaterial({ color: 0x7fb069, gradientMap: toonGradient() }),
-};
-let skinMaterial = rig.mesh.material; // replaced by applySkin below
-let currentSkin = "mannequin";
+// ---------- skins (outfits) ----------
+// A skin is an outfit: five materials (skin, top, bottom, shoes,
+// hair) mapped onto the mesh's clothing regions, with procedural
+// fabric/skin textures. The choice persists in local storage. The
+// weights view temporarily swaps the materials out and restores the
+// current outfit afterwards.
+let skinMaterials = null; // replaced by applySkin below
+let currentSkin = "casual";
 function applySkin(name) {
-  if (!SKINS[name]) name = "mannequin";
+  if (!OUTFITS[name]) name = "casual";
   currentSkin = name;
-  skinMaterial = SKINS[name]();
-  if (!$("showWeights").checked) rig.mesh.material = skinMaterial;
+  const { outfit, materials } = buildOutfitMaterials(name);
+  if (skinMaterials) disposeMaterials(skinMaterials);
+  skinMaterials = materials;
+  // Outfit-dependent regions: sleeves and lower legs may be bare skin.
+  for (const { group, region } of rig.mesh.geometry.userData.groupRegions) {
+    if (region === "sleeve") group.materialIndex = outfit.sleeve === "top" ? REGION_INDEX.top : REGION_INDEX.skin;
+    if (region === "legLower") group.materialIndex = outfit.legLower === "bottom" ? REGION_INDEX.bottom : REGION_INDEX.skin;
+  }
+  if (!$("showWeights").checked) rig.mesh.material = skinMaterials;
   document.querySelectorAll("#skinRow button").forEach((b) =>
     b.classList.toggle("active", b.dataset.skin === name));
   localStorage.setItem("character-animator-skin", name);
 }
 $("skinRow").addEventListener("click", (e) => {
   const name = e.target.dataset?.skin;
-  if (name) { applySkin(name); status(`Skin: ${name}.`); }
+  if (name) { applySkin(name); status(`Outfit: ${OUTFITS[name].label}.`); }
 });
-applySkin(localStorage.getItem("character-animator-skin") || "mannequin");
+applySkin(localStorage.getItem("character-animator-skin") || "casual");
 
 // ---------- selection & pose mode ----------
 const gizmo = new TransformControls(camera, renderer.domElement);
@@ -233,7 +231,7 @@ function applyWeightsView() {
 }
 function clearWeightsView() {
   rig.mesh.geometry.deleteAttribute("color");
-  rig.mesh.material = skinMaterial;
+  rig.mesh.material = skinMaterials;
 }
 
 // ---------- animation: keyframes, playback, presets ----------
