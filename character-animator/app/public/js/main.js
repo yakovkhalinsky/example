@@ -67,6 +67,39 @@ wireMesh.frustumCulled = false;
 wireMesh.visible = false;
 scene.add(wireMesh);
 
+// ---------- skins ----------
+// Same mesh, same weights — a skin is just a material. The choice
+// persists in local storage. The weights view temporarily swaps the
+// material out and restores the current skin afterwards.
+function toonGradient() {
+  const tex = new THREE.DataTexture(new Uint8Array([90, 150, 210, 255]), 4, 1, THREE.RedFormat);
+  tex.minFilter = tex.magFilter = THREE.NearestFilter;
+  tex.needsUpdate = true;
+  return tex;
+}
+const SKINS = {
+  mannequin: () => new THREE.MeshStandardMaterial({ color: 0xc9a06c, roughness: 0.8, metalness: 0.0 }),
+  robot:     () => new THREE.MeshStandardMaterial({ color: 0xb9c2cf, roughness: 0.28, metalness: 0.9 }),
+  ghost:     () => new THREE.MeshStandardMaterial({ color: 0xcfe8ff, roughness: 0.15, metalness: 0.0, transparent: true, opacity: 0.38, depthWrite: false, side: THREE.DoubleSide }),
+  toon:      () => new THREE.MeshToonMaterial({ color: 0x7fb069, gradientMap: toonGradient() }),
+};
+let skinMaterial = rig.mesh.material; // replaced by applySkin below
+let currentSkin = "mannequin";
+function applySkin(name) {
+  if (!SKINS[name]) name = "mannequin";
+  currentSkin = name;
+  skinMaterial = SKINS[name]();
+  if (!$("showWeights").checked) rig.mesh.material = skinMaterial;
+  document.querySelectorAll("#skinRow button").forEach((b) =>
+    b.classList.toggle("active", b.dataset.skin === name));
+  localStorage.setItem("character-animator-skin", name);
+}
+$("skinRow").addEventListener("click", (e) => {
+  const name = e.target.dataset?.skin;
+  if (name) { applySkin(name); status(`Skin: ${name}.`); }
+});
+applySkin(localStorage.getItem("character-animator-skin") || "mannequin");
+
 // ---------- selection & pose mode ----------
 const gizmo = new TransformControls(camera, renderer.domElement);
 gizmo.setMode("rotate");
@@ -173,7 +206,6 @@ $("showWeights").addEventListener("change", (e) => {
   if (e.target.checked) applyWeightsView(); else clearWeightsView();
 });
 
-const baseMaterial = rig.mesh.material;
 function applyWeightsView() {
   const geo = rig.mesh.geometry;
   const si = geo.getAttribute("skinIndex"), sw = geo.getAttribute("skinWeight");
@@ -196,7 +228,7 @@ function applyWeightsView() {
 }
 function clearWeightsView() {
   rig.mesh.geometry.deleteAttribute("color");
-  rig.mesh.material = baseMaterial;
+  rig.mesh.material = skinMaterial;
 }
 
 // ---------- animation: keyframes, playback, presets ----------
@@ -410,7 +442,8 @@ tick();
 
 // Hooks for automated checks and curious consoles.
 window.__animator = {
-  rig, anim, selectBone, setTime, loadPreset, resetPose,
+  rig, anim, selectBone, setTime, loadPreset, resetPose, applySkin,
+  get currentSkin() { return currentSkin; },
   boneCount: rig.boneList.length,
   vertexCount: rig.mesh.geometry.getAttribute("position").count,
 };

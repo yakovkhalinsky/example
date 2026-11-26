@@ -56,6 +56,10 @@ Blender's core character workflow, shrunk to one page:
   *Key pose at current time*. Playback interpolates between keys
   with quaternion slerp, with loop on/off, clickable keyframe
   markers, and per-key delete.
+- **Skins** — one mesh, four materials: *Mannequin* (wood),
+  *Robot* (polished metal), *Ghost* (translucent — the skeleton
+  shows through) and *Toon* (flat cel shading). The choice persists
+  in local storage.
 - **Presets** — *Wave*, *Idle sway* and *Walk cycle* load ready-made
   keyframes so the character moves the moment the page opens.
 - **Save / load** — export the timeline as JSON, import it back, or
