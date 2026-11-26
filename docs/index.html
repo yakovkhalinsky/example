@@ -23,7 +23,7 @@
 <section class="card" id="config">
   <h2>Connection</h2>
   <div class="grid">
-    <label>Endpoint
+    <label id="endpointWrap">Endpoint
       <select id="endpointPreset">
         <option value="https://ollama.com">Ollama Cloud — https://ollama.com</option>
         <option value="same-origin">Node server — same origin (key lives on the server)</option>
@@ -37,11 +37,17 @@
     <label>Model
       <input id="model" type="text" value="clef:cloud">
     </label>
-    <label>Ollama Cloud API key
+    <label id="apiKeyWrap">Ollama Cloud API key
       <input id="apiKey" type="password" placeholder="Only sent to the endpoint above" autocomplete="off">
     </label>
   </div>
-  <p class="note">
+  <p class="note" id="serverNote" hidden>
+    Served by the Node server — the Ollama endpoint and API key are
+    configured in <code>.env</code> on the server, so there's nothing to
+    set here. Just pick a model and run.
+    <span id="serverKeyStatus"></span>
+  </p>
+  <p class="note" id="localNote">
     Your key, endpoint and model are saved only in this browser's local
     storage for this site, so they survive a reload. The key is never sent
     anywhere except the endpoint you choose above — get one at
@@ -49,7 +55,7 @@
     <button id="forgetKey" type="button" class="forget-btn">Forget saved key</button>
     <span id="forgetStatus" class="note" role="status"></span>
   </p>
-  <p class="note">
+  <p class="note" id="realityNote">
     <strong>Reality check:</strong> browsers can't call Ollama Cloud directly —
     its API doesn't answer browser preflight (CORS) requests, so calls from
     this hosted page fail before a key is even sent. Two ways that work:

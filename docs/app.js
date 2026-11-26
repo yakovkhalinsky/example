@@ -242,15 +242,22 @@ function forgetSettings() {
 
 loadSettings();
 
-// If this page is being served by server.js (it answers /healthz) and the
-// user hasn't saved a preset yet, default to the same-origin Node proxy.
-let hasSaved = false;
-try { hasSaved = Boolean(localStorage.getItem(STORAGE_KEY)); } catch (_) {}
-if (!hasSaved) {
-  fetch("/healthz").then((r) => r.json()).then((h) => {
-    if (h && h.ok) { els.preset.value = "same-origin"; updateCustomVisibility(); }
-  }).catch(() => {});
-}
+// If this page is being served by server.js (it answers /healthz), the
+// endpoint and API key live in the server's .env — switch to the
+// same-origin proxy and hide those fields entirely; only Model remains.
+fetch("/healthz").then((r) => r.json()).then((h) => {
+  if (!h || !h.ok) return;
+  els.preset.value = "same-origin";
+  updateCustomVisibility();
+  document.getElementById("endpointWrap").hidden = true;
+  document.getElementById("apiKeyWrap").hidden = true;
+  document.getElementById("localNote").hidden = true;
+  document.getElementById("realityNote").hidden = true;
+  document.getElementById("serverNote").hidden = false;
+  document.getElementById("serverKeyStatus").textContent = h.keyConfigured
+    ? "Server reports an API key is configured."
+    : "Warning: the server reports NO API key configured in .env yet — runs will fail until one is added.";
+}).catch(() => {});
 
 for (const el of [els.preset, els.endpoint, els.model, els.apiKey]) {
   el.addEventListener("input", () => { updateCustomVisibility(); saveSettings(); });
