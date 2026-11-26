@@ -30,6 +30,12 @@ button {
   padding: 9px 18px; font: inherit; font-weight: 600; cursor: pointer; margin-top: 6px;
 }
 button:disabled { opacity: .5; cursor: wait; }
+.forget-btn {
+  background: transparent; color: var(--accent2); border: 1px solid var(--border);
+  padding: 3px 10px; font-size: .82rem; font-weight: 500; margin: 0 0 0 8px;
+  vertical-align: baseline;
+}
+.forget-btn:hover { border-color: var(--accent2); }
 .note { color: var(--muted); font-size: .88rem; }
 .state { white-space: pre-wrap; }
 .qsummary { color: var(--muted); font-size: .88rem; margin: 6px 0; }

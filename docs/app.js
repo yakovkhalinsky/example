@@ -182,9 +182,71 @@ EXAMPLES.forEach((ex, i) => {
   main.appendChild(section);
 });
 
-document.getElementById("endpointPreset").addEventListener("change", (e) => {
-  document.getElementById("customEndpointWrap").hidden = e.target.value !== "custom";
-});
+// --- Persist connection settings in localStorage. ---
+
+const STORAGE_KEY = "decision-model-examples:connection:v1";
+
+const els = {
+  preset: document.getElementById("endpointPreset"),
+  customWrap: document.getElementById("customEndpointWrap"),
+  endpoint: document.getElementById("endpoint"),
+  model: document.getElementById("model"),
+  apiKey: document.getElementById("apiKey"),
+};
+
+function updateCustomVisibility() {
+  els.customWrap.hidden = els.preset.value !== "custom";
+}
+
+function saveSettings() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      endpointPreset: els.preset.value,
+      endpoint: els.endpoint.value,
+      model: els.model.value,
+      apiKey: els.apiKey.value,
+    }));
+  } catch (_) { /* storage unavailable (private mode etc.) — page still works */ }
+}
+
+function loadSettings() {
+  let saved = null;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) saved = JSON.parse(raw);
+  } catch (_) { saved = null; }
+  if (saved && typeof saved === "object") {
+    if (typeof saved.endpointPreset === "string" &&
+        [...els.preset.options].some((o) => o.value === saved.endpointPreset)) {
+      els.preset.value = saved.endpointPreset;
+    }
+    if (typeof saved.endpoint === "string") els.endpoint.value = saved.endpoint;
+    if (typeof saved.model === "string" && saved.model) els.model.value = saved.model;
+    if (typeof saved.apiKey === "string") els.apiKey.value = saved.apiKey;
+  }
+  updateCustomVisibility();
+}
+
+function forgetSettings() {
+  try { localStorage.removeItem(STORAGE_KEY); } catch (_) {}
+  els.apiKey.value = "";
+  els.endpoint.value = "";
+  // Reset the rest to defaults so a reload also comes back clean.
+  els.preset.selectedIndex = 0;
+  els.model.value = "clef:cloud";
+  updateCustomVisibility();
+  const status = document.getElementById("forgetStatus");
+  if (status) status.textContent = "Saved key and settings forgotten.";
+}
+
+loadSettings();
+
+for (const el of [els.preset, els.endpoint, els.model, els.apiKey]) {
+  el.addEventListener("input", () => { updateCustomVisibility(); saveSettings(); });
+  el.addEventListener("change", () => { updateCustomVisibility(); saveSettings(); });
+}
+
+document.getElementById("forgetKey").addEventListener("click", forgetSettings);
 
 document.getElementById("pgRun").addEventListener("click", async (e) => {
   const button = e.target;

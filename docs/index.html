@@ -41,8 +41,12 @@
     </label>
   </div>
   <p class="note">
-    Your key stays in this tab and is only sent to the endpoint you choose —
-    get one at <a href="https://ollama.com/settings/keys">ollama.com/settings/keys</a>.
+    Your key, endpoint and model are saved only in this browser's local
+    storage for this site, so they survive a reload. The key is never sent
+    anywhere except the endpoint you choose above — get one at
+    <a href="https://ollama.com/settings/keys">ollama.com/settings/keys</a>.
+    <button id="forgetKey" type="button" class="forget-btn">Forget saved key</button>
+    <span id="forgetStatus" class="note" role="status"></span>
   </p>
   <p class="note">
     <strong>Reality check:</strong> browsers can't call Ollama Cloud directly —
