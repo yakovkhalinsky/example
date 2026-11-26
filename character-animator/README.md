@@ -44,10 +44,11 @@ Blender's core character workflow, shrunk to one page:
   drawn with a skeleton helper and listed in a clickable
   **outliner** panel.
 - **Skinning** — the mesh is a set of tube “chains” (torso, arms,
-  legs) generated ring by ring in `js/rig.js`. Rings at a joint blend
-  50/50 between the two bones that meet there; mid-segment rings
-  belong wholly to their segment's bone. Posing a bone therefore
-  bends the mesh smoothly instead of tearing it. **Show weights**
+  legs) generated ring by ring in `js/rig.js`, with a blended sphere
+  at every joint so the limbs read as connected anatomy. Rings at a
+  joint blend 50/50 between the two bones that meet there;
+  mid-segment rings belong wholly to their segment's bone. Posing a
+  bone therefore bends the mesh smoothly instead of tearing it. **Show weights**
   recolours the mesh as a heatmap of the selected bone's influence —
   red follows it fully, blue ignores it.
 - **Pose mode** — select a bone by clicking the character (the pick

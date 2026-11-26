@@ -74,25 +74,29 @@ function buildChains(world) {
       { at: headMid, r: 0.125, bone: "head" },
       { at: headTop, r: 0.020, bone: null },
     ], world) },
-    { radial: 9, points: chainPoints([ // arm L
+    { radial: 9, points: chainPoints([ // arm L — starts inside the torso
+      { at: V(0.13, 1.56, 0), r: 0.088, bone: "chest" },
       { at: "upperArm.L", r: 0.075, bone: "upperArm.L" },
       { at: "lowerArm.L", r: 0.058, bone: "lowerArm.L" },
       { at: "hand.L", r: 0.048, bone: "hand.L" },
       { at: tipL, r: 0.030, bone: null },
     ], world) },
-    { radial: 9, points: chainPoints([ // arm R
+    { radial: 9, points: chainPoints([ // arm R — starts inside the torso
+      { at: V(-0.13, 1.56, 0), r: 0.088, bone: "chest" },
       { at: "upperArm.R", r: 0.075, bone: "upperArm.R" },
       { at: "lowerArm.R", r: 0.058, bone: "lowerArm.R" },
       { at: "hand.R", r: 0.048, bone: "hand.R" },
       { at: tipR, r: 0.030, bone: null },
     ], world) },
-    { radial: 10, points: chainPoints([ // leg L
+    { radial: 10, points: chainPoints([ // leg L — starts inside the pelvis
+      { at: V(0.10, 1.01, 0), r: 0.105, bone: "hips" },
       { at: "upperLeg.L", r: 0.095, bone: "upperLeg.L" },
       { at: "lowerLeg.L", r: 0.072, bone: "lowerLeg.L" },
       { at: "foot.L", r: 0.052, bone: "foot.L" },
       { at: toeL, r: 0.036, bone: null },
     ], world) },
-    { radial: 10, points: chainPoints([ // leg R
+    { radial: 10, points: chainPoints([ // leg R — starts inside the pelvis
+      { at: V(-0.10, 1.01, 0), r: 0.105, bone: "hips" },
       { at: "upperLeg.R", r: 0.095, bone: "upperLeg.R" },
       { at: "lowerLeg.R", r: 0.072, bone: "lowerLeg.R" },
       { at: "foot.R", r: 0.052, bone: "foot.R" },
@@ -160,6 +164,44 @@ function buildGeometry(world) {
         indices.push(a, b, a + 1, b, b + 1, a + 1);
       }
     }
+  }
+
+  // Joint balls: a sphere at every joint, blended between the two
+  // bones that meet there, so limbs read as connected anatomy rather
+  // than tubes butted together — and bends stay plump, not pinched.
+  const balls = [
+    ["hips",       [0, -0.04, 0], 0.150, [["hips", 1]]],
+    ["neck",       null, 0.072, [["chest", 0.5], ["neck", 0.5]]],
+    ["head",       null, 0.118, [["neck", 0.4], ["head", 0.6]]],
+    ["upperArm.L", null, 0.088, [["chest", 0.5], ["upperArm.L", 0.5]]],
+    ["upperArm.R", null, 0.088, [["chest", 0.5], ["upperArm.R", 0.5]]],
+    ["lowerArm.L", null, 0.064, [["upperArm.L", 0.5], ["lowerArm.L", 0.5]]],
+    ["lowerArm.R", null, 0.064, [["upperArm.R", 0.5], ["lowerArm.R", 0.5]]],
+    ["hand.L",     null, 0.050, [["lowerArm.L", 0.5], ["hand.L", 0.5]]],
+    ["hand.R",     null, 0.050, [["lowerArm.R", 0.5], ["hand.R", 0.5]]],
+    ["upperLeg.L", null, 0.098, [["hips", 0.5], ["upperLeg.L", 0.5]]],
+    ["upperLeg.R", null, 0.098, [["hips", 0.5], ["upperLeg.R", 0.5]]],
+    ["lowerLeg.L", null, 0.075, [["upperLeg.L", 0.5], ["lowerLeg.L", 0.5]]],
+    ["lowerLeg.R", null, 0.075, [["upperLeg.R", 0.5], ["lowerLeg.R", 0.5]]],
+    ["foot.L",     null, 0.056, [["lowerLeg.L", 0.5], ["foot.L", 0.5]]],
+    ["foot.R",     null, 0.056, [["lowerLeg.R", 0.5], ["foot.R", 0.5]]],
+  ];
+  for (const [atName, offset, radius, weights] of balls) {
+    const centre = world.get(atName).clone();
+    if (offset) centre.add(new THREE.Vector3(...offset));
+    const sphere = new THREE.SphereGeometry(radius, 12, 9);
+    const sp = sphere.getAttribute("position");
+    const si = sphere.getIndex();
+    const base = positions.length / 3;
+    const idx = [0, 0, 0, 0], wgt = [0, 0, 0, 0];
+    weights.forEach(([name, w], k) => { idx[k] = BONE_INDEX.get(name); wgt[k] = w; });
+    for (let i = 0; i < sp.count; i++) {
+      positions.push(centre.x + sp.getX(i), centre.y + sp.getY(i), centre.z + sp.getZ(i));
+      skinIndices.push(...idx);
+      skinWeights.push(...wgt);
+    }
+    for (let i = 0; i < si.count; i++) indices.push(base + si.getX(i));
+    sphere.dispose();
   }
 
   const geo = new THREE.BufferGeometry();
