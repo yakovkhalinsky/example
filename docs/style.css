@@ -3,6 +3,7 @@
   --muted: #9da7b1; --accent: #f0a35e; --accent2: #58a6ff; --bar: #21262d;
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 body {
   margin: 0 auto; max-width: 860px; padding: 24px 16px 64px;
   background: var(--bg); color: var(--text);
