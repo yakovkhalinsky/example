@@ -91,9 +91,16 @@ async function proxySystemOne(req, res) {
   res.end(text);
 }
 
+// The GitHub Pages URL has a /decision-model-examples/ prefix, so people
+// (and saved bookmarks) ask for it here too — accept it as an alias of /.
+const PREFIX = "/decision-model-examples";
+function stripPrefix(p) {
+  return (p === PREFIX || p.startsWith(PREFIX + "/")) ? p.slice(PREFIX.length) || "/" : p;
+}
+
 function serveStatic(req, res) {
   let urlPath;
-  try { urlPath = decodeURIComponent(new URL(req.url, "http://localhost").pathname); }
+  try { urlPath = stripPrefix(decodeURIComponent(new URL(req.url, "http://localhost").pathname)); }
   catch { return sendJson(res, 400, { error: "Bad URL" }); }
   if (urlPath === "/") urlPath = "/index.html";
   const file = path.normalize(path.join(DOCS, urlPath));
@@ -106,9 +113,10 @@ function serveStatic(req, res) {
 }
 
 const server = http.createServer((req, res) => {
-  if (req.method === "POST" && req.url.startsWith("/v1/systemone")) {
+  const pathOnly = stripPrefix(new URL(req.url, "http://localhost").pathname);
+  if (req.method === "POST" && pathOnly.startsWith("/v1/systemone")) {
     proxySystemOne(req, res).catch((e) => sendJson(res, 500, { error: e.message }));
-  } else if (req.method === "GET" && req.url === "/healthz") {
+  } else if (req.method === "GET" && pathOnly === "/healthz") {
     sendJson(res, 200, { ok: true, keyConfigured: Boolean(config("OLLAMA_API_KEY")), upstream: UPSTREAM });
   } else if (req.method === "GET" || req.method === "HEAD") {
     serveStatic(req, res);
