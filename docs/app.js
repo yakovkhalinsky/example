@@ -249,14 +249,13 @@ fetch("/healthz").then((r) => r.json()).then((h) => {
   if (!h || !h.ok) return;
   els.preset.value = "same-origin";
   updateCustomVisibility();
-  document.getElementById("endpointWrap").hidden = true;
-  document.getElementById("apiKeyWrap").hidden = true;
-  document.getElementById("localNote").hidden = true;
-  document.getElementById("realityNote").hidden = true;
-  document.getElementById("serverNote").hidden = false;
-  document.getElementById("serverKeyStatus").textContent = h.keyConfigured
-    ? "Server reports an API key is configured."
-    : "Warning: the server reports NO API key configured in .env yet — runs will fail until one is added.";
+  // Everything in the Connection section is server-side in this mode
+  // (endpoint + key in .env; the model field keeps its default in the
+  // DOM, still hidden), so remove the whole section from the page.
+  document.getElementById("config").hidden = true;
+  if (!h.keyConfigured) {
+    console.warn("Node server reports NO API key configured in .env — runs will fail until one is added.");
+  }
 }).catch(() => {});
 
 for (const el of [els.preset, els.endpoint, els.model, els.apiKey]) {
