@@ -4,18 +4,25 @@
 //
 // Values come from the process environment first, then from .env files,
 // re-read on every lookup so editing .env takes effect without a
-// restart. Two .env locations are supported, in priority order:
-//   1. the repo root (../.env relative to this app/ folder)
-//   2. this app/ folder (./.env)
-// .env is git-ignored in both places; never commit a real key.
+// restart. Three .env locations are supported, in priority order:
+//   1. the git repo root (../../.env relative to this app/ folder)
+//   2. the example folder (../.env — decision-models/.env)
+//   3. this app/ folder (./.env)
+// .env is git-ignored in all places; never commit a real key.
 
 const fs = require("node:fs");
 const path = require("node:path");
 
 const APP_ROOT = path.join(__dirname, "..");
-const REPO_ROOT = path.join(APP_ROOT, "..");
+const EXAMPLE_ROOT = path.join(APP_ROOT, "..");
+const REPO_ROOT = path.join(EXAMPLE_ROOT, "..");
 const PUBLIC_DIR = path.join(APP_ROOT, "public");
-const ENV_FILES = [path.join(APP_ROOT, ".env"), path.join(REPO_ROOT, ".env")];
+// Listed lowest priority first: later files override earlier ones.
+const ENV_FILES = [
+  path.join(APP_ROOT, ".env"),
+  path.join(EXAMPLE_ROOT, ".env"),
+  path.join(REPO_ROOT, ".env"),
+];
 
 function parseEnvFile(file) {
   const out = {};

@@ -57,7 +57,7 @@
     its API doesn't answer browser preflight (CORS) requests, so calls from
     a browser page fail before a key is even sent. Two ways that work:
     <strong>(1) Node server (key on the server):</strong> run
-    <code>node app/server.js</code> from the repo root with
+    <code>node app/server.js</code> from the <code>decision-models/</code> folder with
     <code>OLLAMA_API_KEY</code> in <code>.env</code>, open the page it serves,
     and pick <em>Node server — same origin</em> (auto-selected when the
     server answers) — leave the key field above blank, the server adds the key.
