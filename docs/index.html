@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Decision Model Examples — Jev / System One on Ollama Cloud</title>
+<meta name="description" content="Interactive examples of Jev decision models (System One API) running in your browser against Ollama Cloud.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1>Decision models, live in your browser</h1>
+  <p class="lede">
+    Decision models don't write essays — they <strong>decide</strong>. Send a state
+    (text or JSON) plus typed questions, and a Jev / System One model scores every
+    option in a single forward pass, returning probabilities instead of prose.
+    These are the five examples from the
+    <a href="https://github.com/yakovkhalinsky/decision-model-examples">decision-model-examples repo</a>,
+    running entirely in this page against Ollama Cloud.
+  </p>
+</header>
+
+<section class="card" id="config">
+  <h2>Connection</h2>
+  <div class="grid">
+    <label>Endpoint
+      <select id="endpointPreset">
+        <option value="https://ollama.com">Ollama Cloud — https://ollama.com</option>
+        <option value="http://localhost:11434">Local daemon — http://localhost:11434</option>
+        <option value="custom">Custom…</option>
+      </select>
+    </label>
+    <label id="customEndpointWrap" hidden>Custom endpoint
+      <input id="endpoint" type="text" placeholder="https://your-host:11434">
+    </label>
+    <label>Model
+      <input id="model" type="text" value="clef:cloud">
+    </label>
+    <label>Ollama Cloud API key
+      <input id="apiKey" type="password" placeholder="Only sent to the endpoint above" autocomplete="off">
+    </label>
+  </div>
+  <p class="note">
+    Your key stays in this tab and is only sent to the endpoint you choose —
+    get one at <a href="https://ollama.com/settings/keys">ollama.com/settings/keys</a>.
+    Against a local daemon, no key is needed (serve this page from
+    <code>localhost</code> so the daemon accepts the browser's origin).
+  </p>
+</section>
+
+<main id="examples"></main>
+
+<section class="card" id="playground">
+  <h2>Playground — your own state and questions</h2>
+  <p class="note">Edit the state and the questions JSON
+    (<code>choice</code> / <code>noul</code> / <code>score</code>), then run.</p>
+  <label>State
+    <textarea id="pgState" rows="3">Our production database is down, 400 users are locked out, and the CEO is asking for an ETA.</textarea>
+  </label>
+  <label>Questions (JSON)
+    <textarea id="pgQuestions" rows="10">{
+  "severity": {
+    "type": "score",
+    "instructions": "How severe is this incident?",
+    "criteria": ["Minor", "Major", "Critical"]
+  },
+  "page_the_ceo": {
+    "type": "noul",
+    "instructions": "Should the CEO be paged about this right now?"
+  }
+}</textarea>
+  </label>
+  <button id="pgRun">Run decision</button>
+  <div class="results" id="pgResults"></div>
+</section>
+
+<footer>
+  <p>Probabilities vary slightly between runs — that's rather the point of returning them.
+     Code: <a href="https://github.com/yakovkhalinsky/decision-model-examples">github.com/yakovkhalinsky/decision-model-examples</a> (MIT).</p>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

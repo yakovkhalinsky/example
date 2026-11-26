@@ -8,6 +8,11 @@ Everything lives in the [`examples/`](examples/) folder, which is
 self-contained: a tiny stdlib-only Python client (`jev.py`), five runnable
 examples, and a README explaining how to use each one.
 
+**Prefer clicking to running code?** The same five examples run in your
+browser — no installs, bring your own Ollama Cloud key:
+**https://yakovkhalinsky.github.io/decision-model-examples/** (source in
+[`docs/`](docs/)).
+
 ## Start here
 
 ```bash
