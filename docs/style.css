@@ -72,3 +72,6 @@ footer { color: var(--muted); font-size: .88rem; margin-top: 28px; }
   font-family: ui-monospace, Menlo, Consolas, monospace; color: var(--text);
   margin: 6px 0 0; max-height: 420px; overflow: auto;
 }
+.inputBlock { margin-top: 12px; border-top: 1px solid var(--border); padding-top: 8px; }
+.inputBlock summary { cursor: pointer; color: var(--muted); font-size: .85rem; }
+.inputBlock .raw { color: var(--muted); }

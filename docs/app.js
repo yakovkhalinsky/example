@@ -19,13 +19,14 @@ function authHeaders() {
 
 async function decideFull(state, questions) {
   const model = document.getElementById("model").value || "clef:cloud";
+  const payload = { model, state, questions };
   const t0 = performance.now();
   let resp;
   try {
     resp = await fetch(`${endpoint()}/v1/systemone`, {
       method: "POST",
       headers: authHeaders(),
-      body: JSON.stringify({ model, state, questions }),
+      body: JSON.stringify(payload),
     });
   } catch (e) {
     throw new Error(
@@ -37,7 +38,7 @@ async function decideFull(state, questions) {
   const text = await resp.text();
   if (!resp.ok) throw new Error(`HTTP ${resp.status} from the endpoint:\n${text}`);
   const data = JSON.parse(text);
-  return { answers: data.answers, usage: data.usage || null, model, ms: Math.round(performance.now() - t0) };
+  return { answers: data.answers, usage: data.usage || null, model, ms: Math.round(performance.now() - t0), input: JSON.stringify(payload, null, 2) };
 }
 
 async function decide(state, questions) {
@@ -62,13 +63,14 @@ function llmPrompt(state, questions) {
 
 async function askLLM(state, questions) {
   const model = document.getElementById("llmModel").value || "gpt-oss:120b";
+  const prompt = llmPrompt(state, questions);
   const t0 = performance.now();
   let resp;
   try {
     resp = await fetch(`${endpoint()}/v1/chat/completions`, {
       method: "POST",
       headers: authHeaders(),
-      body: JSON.stringify({ model, stream: false, messages: [{ role: "user", content: llmPrompt(state, questions) }] }),
+      body: JSON.stringify({ model, stream: false, messages: [{ role: "user", content: prompt }] }),
     });
   } catch (e) {
     throw new Error(`Network error calling ${endpoint()}/v1/chat/completions. (${e.message})`);
@@ -77,7 +79,7 @@ async function askLLM(state, questions) {
   if (!resp.ok) throw new Error(`HTTP ${resp.status} from the endpoint:\n${text}`);
   const data = JSON.parse(text);
   const msg = (data.choices && data.choices[0] && data.choices[0].message) || {};
-  return { text: msg.content || "(empty response)", usage: data.usage || null, model, ms: Math.round(performance.now() - t0) };
+  return { text: msg.content || "(empty response)", usage: data.usage || null, model, ms: Math.round(performance.now() - t0), input: prompt };
 }
 
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;");
@@ -85,13 +87,17 @@ const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;");
 function renderCompare(so, llm, afterFn) {
   const soUsage = so.usage ? `${so.usage.input_tokens ?? "?"} in / ${so.usage.output_tokens ?? 0} out tokens` : "tokens n/a";
   const llmUsage = llm.usage ? `${llm.usage.prompt_tokens ?? llm.usage.input_tokens ?? "?"} in / ${llm.usage.completion_tokens ?? llm.usage.output_tokens ?? "?"} out tokens` : "tokens n/a";
+  const inputBlock = (input) => input
+    ? `<details class="inputBlock" open><summary>Whole input sent</summary><pre class="raw">${esc(input)}</pre></details>` : "";
   return `<div class="compare">
     <div class="side"><h3>Decision model — ${esc(so.model)}</h3>
       <p class="note">${so.ms} ms · ${soUsage} · probabilities, no generated text</p>
-      ${renderAnswers(so.answers)}${afterFn ? afterFn(so.answers) : ""}</div>
+      ${renderAnswers(so.answers)}${afterFn ? afterFn(so.answers) : ""}
+      ${inputBlock(so.input)}</div>
     <div class="side"><h3>Normal LLM — ${esc(llm.model)}</h3>
       <p class="note">${llm.ms} ms · ${llmUsage} · generated text</p>
-      <pre class="raw">${esc(llm.text)}</pre></div>
+      <pre class="raw">${esc(llm.text)}</pre>
+      ${inputBlock(llm.input)}</div>
   </div>`;
 }
 
