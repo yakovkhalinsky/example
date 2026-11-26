@@ -1,19 +1,44 @@
-// Page wiring: builds the example cards, hooks up Run buttons, and
-// runs the side-by-side comparison (decision model vs normal LLM on
-// the same state and questions, in parallel).
+// Page wiring: builds the example cards and hooks up the Run
+// buttons. Each card (and the playground) has two independent
+// buttons — Run decision model and Run LLM — and each fills its own
+// side of the comparison grid, so the two can be run in any order
+// and compared side by side.
 
 import { els } from "./els.js";
 import { decideFull, askLLM } from "./api.js";
-import { renderCompare, renderPartial, esc } from "./render.js";
+import { renderDecisionSide, renderLLMSide, renderError, esc } from "./render.js";
 import { EXAMPLES } from "./examples.js";
 import { initSettings } from "./settings.js";
 
-async function runCompare(resultsEl, state, questions, afterFn) {
-  resultsEl.innerHTML = `<p class="note">Asking both models…</p>`;
-  const [so, llm] = await Promise.allSettled([decideFull(state, questions), askLLM(state, questions)]);
-  resultsEl.innerHTML = (so.status === "fulfilled" && llm.status === "fulfilled")
-    ? renderCompare(so.value, llm.value, afterFn)
-    : renderPartial(so, llm);
+// The results area is a two-column grid with one slot per model;
+// slots are created on first use with a "not run yet" placeholder.
+function ensureSlots(resultsEl) {
+  let decision = resultsEl.querySelector(".slotDecision");
+  if (!decision) {
+    resultsEl.innerHTML = `<div class="compare">
+      <div class="slotDecision"><p class="note">Decision model not run yet.</p></div>
+      <div class="slotLlm"><p class="note">LLM not run yet.</p></div>
+    </div>`;
+    decision = resultsEl.querySelector(".slotDecision");
+  }
+  return { decision, llm: resultsEl.querySelector(".slotLlm") };
+}
+
+// Attach one Run button: on click it fills its side's slot with the
+// rendered result (or the error), leaving the other side untouched.
+function attachRun(button, resultsEl, slotName, run) {
+  button.addEventListener("click", async () => {
+    button.disabled = true;
+    const slot = ensureSlots(resultsEl)[slotName];
+    slot.innerHTML = `<p class="note">Asking…</p>`;
+    try {
+      slot.innerHTML = await run();
+    } catch (e) {
+      slot.innerHTML = renderError(e);
+    } finally {
+      button.disabled = false;
+    }
+  });
 }
 
 function buildExampleCard(ex) {
@@ -26,37 +51,28 @@ function buildExampleCard(ex) {
     <p class="note">${ex.blurb}</p>
     <label>State<textarea class="state" rows="${ex.stateIsJson ? 9 : 4}">${esc(ex.state)}</textarea></label>
     <p class="qsummary">Questions: ${qSummary}</p>
-    <button class="runBtn">Run decision</button>
+    <button class="runDecision">Run decision model</button>
+    <button class="runLlm">Run LLM</button>
     <div class="results"></div>`;
-  const button = section.querySelector(".runBtn");
   const results = section.querySelector(".results");
-  button.addEventListener("click", async () => {
-    button.disabled = true;
-    try {
-      const raw = section.querySelector(".state").value;
-      const state = ex.stateIsJson ? JSON.parse(raw) : raw;
-      await runCompare(results, state, ex.questions, ex.after);
-    } catch (e) {
-      results.innerHTML = `<div class="error">${esc(e.message)}</div>`;
-    } finally {
-      button.disabled = false;
-    }
-  });
+  const getState = () => {
+    const raw = section.querySelector(".state").value;
+    return ex.stateIsJson ? JSON.parse(raw) : raw;
+  };
+  attachRun(section.querySelector(".runDecision"), results, "decision",
+    async () => renderDecisionSide(await decideFull(getState(), ex.questions), ex.after));
+  attachRun(section.querySelector(".runLlm"), results, "llm",
+    async () => renderLLMSide(await askLLM(getState(), ex.questions)));
   return section;
 }
 
 for (const ex of EXAMPLES) els.examples.appendChild(buildExampleCard(ex));
 
-els.pgRun.addEventListener("click", async () => {
-  els.pgRun.disabled = true;
-  try {
-    const questions = JSON.parse(els.pgQuestions.value);
-    await runCompare(els.pgResults, els.pgState.value, questions);
-  } catch (err) {
-    els.pgResults.innerHTML = `<div class="error">${esc(err.message)}</div>`;
-  } finally {
-    els.pgRun.disabled = false;
-  }
-});
+// Playground: same two buttons, state/questions read from the form.
+const pgQuestions = () => JSON.parse(els.pgQuestions.value);
+attachRun(els.pgRunDecision, els.pgResults, "decision",
+  async () => renderDecisionSide(await decideFull(els.pgState.value, pgQuestions())));
+attachRun(els.pgRunLlm, els.pgResults, "llm",
+  async () => renderLLMSide(await askLLM(els.pgState.value, pgQuestions())));
 
 initSettings();

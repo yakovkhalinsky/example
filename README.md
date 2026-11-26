@@ -40,9 +40,10 @@ In server mode the page's Connection section is hidden entirely
 (endpoint and key live in `.env`), leaving a **Models bar**: a dropdown
 of the System One models verified against Ollama Cloud (`clef:cloud`,
 `clef-flash:cloud`, `clef:27b`, `clef`, `clef-flash`) and a dropdown of
-normal LLMs. The single *Run decision* button on every example runs
-the same state and questions through both models, side by side, with
-the whole input, timing and token counts for each.
+normal LLMs. Every example has two *Run* buttons — one per model —
+and each fills its own side of the comparison with the whole input,
+timing and token counts, so the two can be run in any order and
+compared side by side.
 
 Alternatively, serve `app/public/` statically and run it against a local
 Ollama daemon (choose *Custom…* and point it at the daemon; no key

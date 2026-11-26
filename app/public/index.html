@@ -93,10 +93,10 @@
     </label>
   </div>
   <p class="note">System One models verified live against Ollama Cloud on
-    26 Nov 2026. The single <em>Run decision</em> button on every example
-    runs both: same state and questions, answered by the decision model
+    26 Nov 2026. Every example has two <em>Run</em> buttons — one per
+    model: same state and questions, answered by the decision model
     (probabilities, one forward pass) and by the normal LLM (generated
-    text) side by side, with timing and token counts.</p>
+    text), each filling its own side, with timing and token counts.</p>
 </section>
 
 <main id="examples"></main>
@@ -121,7 +121,8 @@
   }
 }</textarea>
   </label>
-  <button id="pgRun">Run decision</button>
+  <button id="pgRunDecision">Run decision model</button>
+  <button id="pgRunLlm">Run LLM</button>
   <div class="results" id="pgResults"></div>
 </section>
 

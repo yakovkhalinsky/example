@@ -38,29 +38,24 @@ export function renderAnswers(answers) {
 const inputBlock = (input) => input
   ? `<details class="inputBlock" open><summary>Whole input sent</summary><pre class="raw">${esc(input)}</pre></details>` : "";
 
-export function renderCompare(so, llm, afterFn) {
-  const soUsage = so.usage ? `${so.usage.input_tokens ?? "?"} in / ${so.usage.output_tokens ?? 0} out tokens` : "tokens n/a";
-  const llmUsage = llm.usage ? `${llm.usage.prompt_tokens ?? llm.usage.input_tokens ?? "?"} in / ${llm.usage.completion_tokens ?? llm.usage.output_tokens ?? "?"} out tokens` : "tokens n/a";
-  return `<div class="compare">
-    <div class="side"><h3>Decision model — ${esc(so.model)}</h3>
-      <p class="note">${so.ms} ms · ${soUsage} · probabilities, no generated text</p>
-      ${renderAnswers(so.answers)}${afterFn ? afterFn(so.answers) : ""}
-      ${inputBlock(so.input)}</div>
-    <div class="side"><h3>Normal LLM — ${esc(llm.model)}</h3>
-      <p class="note">${llm.ms} ms · ${llmUsage} · generated text</p>
-      <pre class="raw">${esc(llm.text)}</pre>
-      ${inputBlock(llm.input)}</div>
-  </div>`;
+// Each side renders independently: the two Run buttons fill their
+// own half of the comparison grid, in whichever order they're clicked.
+export function renderDecisionSide(so, afterFn) {
+  const usage = so.usage ? `${so.usage.input_tokens ?? "?"} in / ${so.usage.output_tokens ?? 0} out tokens` : "tokens n/a";
+  return `<div class="side"><h3>Decision model — ${esc(so.model)}</h3>
+    <p class="note">${so.ms} ms · ${usage} · probabilities, no generated text</p>
+    ${renderAnswers(so.answers)}${afterFn ? afterFn(so.answers) : ""}
+    ${inputBlock(so.input)}</div>`;
 }
 
-// Partial-failure rendering for runCompare: whichever side answered
-// is shown, with the other side's error next to it.
-export function renderPartial(so, llm) {
-  const err = (r) => r.status === "rejected" ? `<div class="error">${esc(r.reason.message)}</div>` : "";
-  const ok = (r, label) => r.status === "fulfilled"
-    ? (label === "so"
-      ? `<div class="side"><h3>Decision model</h3>${renderAnswers(r.value.answers)}${inputBlock(r.value.input)}</div>`
-      : `<div class="side"><h3>Normal LLM</h3><pre class="raw">${esc(r.value.text)}</pre>${inputBlock(r.value.input)}</div>`)
-    : "";
-  return `<div class="compare">${ok(so, "so")}${err(so)}${ok(llm, "llm")}${err(llm)}</div>`;
+export function renderLLMSide(llm) {
+  const usage = llm.usage ? `${llm.usage.prompt_tokens ?? llm.usage.input_tokens ?? "?"} in / ${llm.usage.completion_tokens ?? llm.usage.output_tokens ?? "?"} out tokens` : "tokens n/a";
+  return `<div class="side"><h3>Normal LLM — ${esc(llm.model)}</h3>
+    <p class="note">${llm.ms} ms · ${usage} · generated text</p>
+    <pre class="raw">${esc(llm.text)}</pre>
+    ${inputBlock(llm.input)}</div>`;
+}
+
+export function renderError(e) {
+  return `<div class="error">${esc(e.message)}</div>`;
 }
