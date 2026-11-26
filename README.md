@@ -22,6 +22,20 @@ Choose *Custom…* as the endpoint and point it at your daemon (local, or a
 host on your own network), model `clef:cloud`, no API key needed —
 daemons accept browser calls from localhost origins by default.
 
+**Or run the Node server and use Ollama Cloud through it** — the browser
+talks to the server on the same origin, and the server adds the key, so
+CORS never comes into it and the key never reaches the browser:
+
+```bash
+cp .env.example .env   # put OLLAMA_API_KEY=... in .env (git-ignored)
+node server.js         # serves docs/ and proxies /v1/systemone, port 8000
+```
+
+Open the page it serves and pick *Node server — same origin* as the
+endpoint (auto-selected when the server answers), model `clef:cloud`,
+leave the page's key field blank. Editing `.env` takes effect without a
+restart — the server re-reads it per request. No dependencies; Node 18+.
+
 ## Start here
 
 ```bash

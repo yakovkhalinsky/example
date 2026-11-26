@@ -26,6 +26,7 @@
     <label>Endpoint
       <select id="endpointPreset">
         <option value="https://ollama.com">Ollama Cloud — https://ollama.com</option>
+        <option value="same-origin">Node server — same origin (key lives on the server)</option>
         <option value="http://localhost:11434">Local daemon — http://localhost:11434</option>
         <option value="custom">Custom…</option>
       </select>
@@ -51,13 +52,16 @@
   <p class="note">
     <strong>Reality check:</strong> browsers can't call Ollama Cloud directly —
     its API doesn't answer browser preflight (CORS) requests, so calls from
-    this hosted page fail before a key is even sent. The reliable way to run
-    the demo is against an Ollama daemon: serve this folder locally
+    this hosted page fail before a key is even sent. Two ways that work:
+    <strong>(1) Node server (key on the server):</strong> run
+    <code>node server.js</code> in the repo root with
+    <code>OLLAMA_API_KEY</code> in <code>.env</code>, open the page it serves,
+    and pick <em>Node server — same origin</em> (auto-selected when the
+    server answers) — leave the key field above blank, the server adds the key.
+    <strong>(2) Ollama daemon:</strong> serve this folder locally
     (<code>python3 -m http.server 8000</code> inside <code>docs/</code>),
     open <code>http://localhost:8000</code>, pick <em>Custom…</em> and point
-    it at your daemon (local, or a host on your own network), model
-    <code>clef:cloud</code>, no key needed. Daemons accept browser calls
-    from localhost origins by default.
+    it at your daemon, model <code>clef:cloud</code>, no key needed.
   </p>
 </section>
 

@@ -4,6 +4,7 @@
 
 function endpoint() {
   const preset = document.getElementById("endpointPreset").value;
+  if (preset === "same-origin") return location.origin;
   return (preset === "custom"
     ? document.getElementById("endpoint").value.trim()
     : preset).replace(/\/+$/, "");
@@ -240,6 +241,16 @@ function forgetSettings() {
 }
 
 loadSettings();
+
+// If this page is being served by server.js (it answers /healthz) and the
+// user hasn't saved a preset yet, default to the same-origin Node proxy.
+let hasSaved = false;
+try { hasSaved = Boolean(localStorage.getItem(STORAGE_KEY)); } catch (_) {}
+if (!hasSaved) {
+  fetch("/healthz").then((r) => r.json()).then((h) => {
+    if (h && h.ok) { els.preset.value = "same-origin"; updateCustomVisibility(); }
+  }).catch(() => {});
+}
 
 for (const el of [els.preset, els.endpoint, els.model, els.apiKey]) {
   el.addEventListener("input", () => { updateCustomVisibility(); saveSettings(); });
