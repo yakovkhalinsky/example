@@ -9,24 +9,17 @@ Nothing here is hosted: check the repo out and run it yourself.
 ## What's in this repo
 
 ```
-python/    The five examples in Python (stdlib only) + the jev.py client
-web/       The same five examples as a web page (index.html, app.js, style.css)
-server.js  Node server: serves web/ and proxies the API calls, adding
-           the Ollama Cloud key server-side (see "Web demo" below)
-.env.example   Copy to .env and add your OLLAMA_API_KEY (git-ignored)
+app/
+  server.js        Entry point: starts the HTTP server
+  lib/             Server modules — config (.env), router, proxy, static files
+  public/          The web page
+    index.html
+    style.css
+    js/            Browser modules — main, examples, api, render, settings, els
+.env.example       Copy to .env and add your OLLAMA_API_KEY (git-ignored)
 ```
 
-## Python
-
-```bash
-cd python
-export OLLAMA_API_KEY=<your key from ollama.com/settings/keys>
-./run_all.sh            # all five examples, or run one: python3 01_ticket_triage.py
-```
-
-Full guide: **[python/README.md](python/README.md)**
-
-## Web demo
+## Run it
 
 Check the repo out, then run the Node server — the browser talks to
 the server on the same origin, the server adds the key from `.env`,
@@ -36,9 +29,12 @@ answer browser preflight/CORS requests.)
 
 ```bash
 cp .env.example .env   # put OLLAMA_API_KEY=... in .env
-node server.js         # port 8000; editing .env needs no restart
+node app/server.js     # or: cd app && npm start — port 8000
 # open http://localhost:8000
 ```
+
+Editing `.env` needs no restart; the key is re-read per request.
+No dependencies; Node 18+.
 
 In server mode the page's Connection section is hidden entirely
 (endpoint and key live in `.env`), leaving a **Models bar**: a dropdown
@@ -46,10 +42,9 @@ of the System One models verified against Ollama Cloud (`clef:cloud`,
 `clef-flash:cloud`, `clef:27b`, `clef`, `clef-flash`) and a dropdown of
 normal LLMs. The single *Run decision* button on every example runs
 the same state and questions through both models, side by side, with
-the whole input, timing and token counts for each. No dependencies;
-Node 18+.
+the whole input, timing and token counts for each.
 
-Alternatively, serve `web/` statically and run it against a local
+Alternatively, serve `app/public/` statically and run it against a local
 Ollama daemon (choose *Custom…* and point it at the daemon; no key
 needed — daemons accept browser calls from localhost origins).
 

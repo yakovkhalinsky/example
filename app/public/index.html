@@ -57,12 +57,12 @@
     its API doesn't answer browser preflight (CORS) requests, so calls from
     a browser page fail before a key is even sent. Two ways that work:
     <strong>(1) Node server (key on the server):</strong> run
-    <code>node server.js</code> in the repo root with
+    <code>node app/server.js</code> from the repo root with
     <code>OLLAMA_API_KEY</code> in <code>.env</code>, open the page it serves,
     and pick <em>Node server — same origin</em> (auto-selected when the
     server answers) — leave the key field above blank, the server adds the key.
     <strong>(2) Ollama daemon:</strong> serve this folder locally
-    (<code>python3 -m http.server 8000</code> inside <code>web/</code>),
+    (<code>python3 -m http.server 8000</code> inside <code>app/public/</code>),
     open <code>http://localhost:8000</code>, pick <em>Custom…</em> and point
     it at your daemon, model <code>clef:cloud</code>, no key needed.
   </p>
@@ -130,6 +130,6 @@
      Code: <a href="https://github.com/yakovkhalinsky/decision-model-examples">github.com/yakovkhalinsky/decision-model-examples</a> (MIT).</p>
 </footer>
 
-<script src="app.js"></script>
+<script type="module" src="js/main.js"></script>
 </body>
 </html>

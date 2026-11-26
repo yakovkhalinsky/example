@@ -1,0 +1,1 @@
+{"description":"Web demo for Jev / System One decision models: a zero-dependency Node server that serves the page and proxies Ollama Cloud calls with a server-side API key.","engines":{"node":">=18"},"name":"decision-model-examples-app","private":true,"scripts":{"start":"node server.js"},"version":"1.0.0"}
