@@ -8,10 +8,19 @@ Everything lives in the [`examples/`](examples/) folder, which is
 self-contained: a tiny stdlib-only Python client (`jev.py`), five runnable
 examples, and a README explaining how to use each one.
 
-**Prefer clicking to running code?** The same five examples run in your
-browser — no installs, bring your own Ollama Cloud key:
-**https://yakov.khalinsky.com/decision-model-examples/** (source in
-[`docs/`](docs/)).
+**Prefer clicking to running code?** The same five examples run as a web
+page: **https://yakov.khalinsky.com/decision-model-examples/** (source in
+[`docs/`](docs/)). One catch: browsers can't call Ollama Cloud directly —
+its API doesn't answer browser preflight (CORS) requests — so run the
+page against an Ollama daemon instead:
+
+```bash
+cd docs && python3 -m http.server 8000   # then open http://localhost:8000
+```
+
+Choose *Custom…* as the endpoint and point it at your daemon (local, or a
+host on your own network), model `clef:cloud`, no API key needed —
+daemons accept browser calls from localhost origins by default.
 
 ## Start here
 
