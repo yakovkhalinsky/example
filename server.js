@@ -70,7 +70,7 @@ function sendJson(res, status, obj) {
   res.end(body);
 }
 
-async function proxySystemOne(req, res) {
+async function proxyPost(req, res, upstreamPath) {
   const chunks = [];
   for await (const c of req) chunks.push(c);
   const body = Buffer.concat(chunks);
@@ -82,7 +82,7 @@ async function proxySystemOne(req, res) {
 
   let upstream;
   try {
-    upstream = await fetch(`${UPSTREAM}/v1/systemone`, { method: "POST", headers, body });
+    upstream = await fetch(`${UPSTREAM}${upstreamPath}`, { method: "POST", headers, body });
   } catch (e) {
     return sendJson(res, 502, { error: `Proxy could not reach ${UPSTREAM}: ${e.message}` });
   }
@@ -114,8 +114,8 @@ function serveStatic(req, res) {
 
 const server = http.createServer((req, res) => {
   const pathOnly = stripPrefix(new URL(req.url, "http://localhost").pathname);
-  if (req.method === "POST" && pathOnly.startsWith("/v1/systemone")) {
-    proxySystemOne(req, res).catch((e) => sendJson(res, 500, { error: e.message }));
+  if (req.method === "POST" && (pathOnly.startsWith("/v1/systemone") || pathOnly.startsWith("/v1/chat/completions"))) {
+    proxyPost(req, res, pathOnly).catch((e) => sendJson(res, 500, { error: e.message }));
   } else if (req.method === "GET" && pathOnly === "/healthz") {
     sendJson(res, 200, { ok: true, keyConfigured: Boolean(config("OLLAMA_API_KEY")), upstream: UPSTREAM });
   } else if (req.method === "GET" || req.method === "HEAD") {

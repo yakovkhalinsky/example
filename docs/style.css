@@ -56,3 +56,19 @@ button:disabled { opacity: .5; cursor: wait; }
   padding: 10px 12px; white-space: pre-wrap; font-size: .9rem;
 }
 footer { color: var(--muted); font-size: .88rem; margin-top: 28px; }
+.compareBtn, #pgCompare {
+  background: transparent; color: var(--accent2); border: 1px solid var(--border);
+  margin-left: 8px;
+}
+.compare { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 10px; }
+@media (max-width: 640px) { .compare { grid-template-columns: 1fr; } }
+.compare .side {
+  border: 1px solid var(--border); border-radius: 8px; padding: 12px;
+  background: var(--bg); min-width: 0;
+}
+.compare .side h3 { margin: 0 0 4px; font-size: .98rem; }
+.raw {
+  white-space: pre-wrap; word-break: break-word; font-size: .85rem;
+  font-family: ui-monospace, Menlo, Consolas, monospace; color: var(--text);
+  margin: 6px 0 0; max-height: 420px; overflow: auto;
+}

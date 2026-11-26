@@ -10,16 +10,21 @@ function endpoint() {
     : preset).replace(/\/+$/, "");
 }
 
-async function decide(state, questions) {
+function authHeaders() {
   const headers = { "Content-Type": "application/json" };
   const key = document.getElementById("apiKey").value.trim();
   if (key) headers["Authorization"] = `Bearer ${key}`;
-  const model = document.getElementById("model").value.trim() || "clef:cloud";
+  return headers;
+}
+
+async function decideFull(state, questions) {
+  const model = document.getElementById("model").value || "clef:cloud";
+  const t0 = performance.now();
   let resp;
   try {
     resp = await fetch(`${endpoint()}/v1/systemone`, {
       method: "POST",
-      headers,
+      headers: authHeaders(),
       body: JSON.stringify({ model, state, questions }),
     });
   } catch (e) {
@@ -31,7 +36,77 @@ async function decide(state, questions) {
   }
   const text = await resp.text();
   if (!resp.ok) throw new Error(`HTTP ${resp.status} from the endpoint:\n${text}`);
-  return JSON.parse(text).answers;
+  const data = JSON.parse(text);
+  return { answers: data.answers, usage: data.usage || null, model, ms: Math.round(performance.now() - t0) };
+}
+
+async function decide(state, questions) {
+  return (await decideFull(state, questions)).answers;
+}
+
+// --- The normal-LLM side of the comparison. ---
+
+function llmPrompt(state, questions) {
+  const stateText = typeof state === "string" ? state : JSON.stringify(state, null, 2);
+  let out = `Here is a situation:\n\n${stateText}\n\nAnswer every question below about it.\n`;
+  for (const [name, q] of Object.entries(questions)) {
+    out += `\n- ${name} (${q.type}): ${q.instructions}`;
+    if (q.type === "choice") out += ` Choose exactly one of: ${Object.keys(q.criteria || {}).join(", ")}.`;
+    if (q.type === "noul") out += ` Answer true or false.`;
+    if (q.type === "score") out += ` Choose exactly one of: ${(q.criteria || []).join(", ")}.`;
+  }
+  out += `\n\nReply with ONLY a JSON object mapping each question name to your answer ` +
+    `(choice/score: the option text; noul: true or false), then one short sentence per question explaining why.`;
+  return out;
+}
+
+async function askLLM(state, questions) {
+  const model = document.getElementById("llmModel").value || "gpt-oss:120b";
+  const t0 = performance.now();
+  let resp;
+  try {
+    resp = await fetch(`${endpoint()}/v1/chat/completions`, {
+      method: "POST",
+      headers: authHeaders(),
+      body: JSON.stringify({ model, stream: false, messages: [{ role: "user", content: llmPrompt(state, questions) }] }),
+    });
+  } catch (e) {
+    throw new Error(`Network error calling ${endpoint()}/v1/chat/completions. (${e.message})`);
+  }
+  const text = await resp.text();
+  if (!resp.ok) throw new Error(`HTTP ${resp.status} from the endpoint:\n${text}`);
+  const data = JSON.parse(text);
+  const msg = (data.choices && data.choices[0] && data.choices[0].message) || {};
+  return { text: msg.content || "(empty response)", usage: data.usage || null, model, ms: Math.round(performance.now() - t0) };
+}
+
+const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;");
+
+function renderCompare(so, llm) {
+  const soUsage = so.usage ? `${so.usage.input_tokens ?? "?"} in / ${so.usage.output_tokens ?? 0} out tokens` : "tokens n/a";
+  const llmUsage = llm.usage ? `${llm.usage.prompt_tokens ?? llm.usage.input_tokens ?? "?"} in / ${llm.usage.completion_tokens ?? llm.usage.output_tokens ?? "?"} out tokens` : "tokens n/a";
+  return `<div class="compare">
+    <div class="side"><h3>Decision model — ${esc(so.model)}</h3>
+      <p class="note">${so.ms} ms · ${soUsage} · probabilities, no generated text</p>
+      ${renderAnswers(so.answers)}</div>
+    <div class="side"><h3>Normal LLM — ${esc(llm.model)}</h3>
+      <p class="note">${llm.ms} ms · ${llmUsage} · generated text</p>
+      <pre class="raw">${esc(llm.text)}</pre></div>
+  </div>`;
+}
+
+async function runCompare(resultsEl, state, questions) {
+  resultsEl.innerHTML = `<p class="note">Asking both models…</p>`;
+  const [so, llm] = await Promise.allSettled([decideFull(state, questions), askLLM(state, questions)]);
+  if (so.status === "fulfilled" && llm.status === "fulfilled") {
+    resultsEl.innerHTML = renderCompare(so.value, llm.value);
+  } else {
+    const err = (r) => r.status === "rejected" ? `<div class="error">${esc(r.reason.message)}</div>` : "";
+    const ok = (r, label) => r.status === "fulfilled"
+      ? (label === "so" ? `<div class="side"><h3>Decision model</h3>${renderAnswers(r.value.answers)}</div>`
+                         : `<div class="side"><h3>Normal LLM</h3><pre class="raw">${esc(r.value.text)}</pre></div>`) : "";
+    resultsEl.innerHTML = `<div class="compare">${ok(so, "so")}${err(so)}${ok(llm, "llm")}${err(llm)}</div>`;
+  }
 }
 
 // --- Rendering answers as probability bars. ---
@@ -162,22 +237,36 @@ EXAMPLES.forEach((ex, i) => {
     <p class="note">${ex.blurb}</p>
     <label>State<textarea class="state" rows="${ex.stateIsJson ? 9 : 4}">${ex.state.replace(/&/g, "&amp;").replace(/</g, "&lt;")}</textarea></label>
     <p class="qsummary">Questions: ${qSummary}</p>
-    <button>Run decision</button>
+    <button class="runBtn">Run decision</button>
+    <button class="compareBtn">Compare with LLM</button>
     <div class="results"></div>`;
-  const button = section.querySelector("button");
+  const button = section.querySelector(".runBtn");
+  const compareButton = section.querySelector(".compareBtn");
   const results = section.querySelector(".results");
+  const getState = () => {
+    const raw = section.querySelector(".state").value;
+    return ex.stateIsJson ? JSON.parse(raw) : raw;
+  };
   button.addEventListener("click", async () => {
     button.disabled = true;
     results.innerHTML = `<p class="note">Deciding…</p>`;
     try {
-      const raw = section.querySelector(".state").value;
-      const state = ex.stateIsJson ? JSON.parse(raw) : raw;
-      const answers = await decide(state, ex.questions);
+      const answers = await decide(getState(), ex.questions);
       results.innerHTML = renderAnswers(answers) + (ex.after ? ex.after(answers) : "");
     } catch (e) {
       results.innerHTML = `<div class="error">${e.message.replace(/</g, "&lt;")}</div>`;
     } finally {
       button.disabled = false;
+    }
+  });
+  compareButton.addEventListener("click", async () => {
+    compareButton.disabled = true;
+    try {
+      await runCompare(results, getState(), ex.questions);
+    } catch (e) {
+      results.innerHTML = `<div class="error">${e.message.replace(/</g, "&lt;")}</div>`;
+    } finally {
+      compareButton.disabled = false;
     }
   });
   main.appendChild(section);
@@ -192,6 +281,7 @@ const els = {
   customWrap: document.getElementById("customEndpointWrap"),
   endpoint: document.getElementById("endpoint"),
   model: document.getElementById("model"),
+  llmModel: document.getElementById("llmModel"),
   apiKey: document.getElementById("apiKey"),
 };
 
@@ -205,6 +295,7 @@ function saveSettings() {
       endpointPreset: els.preset.value,
       endpoint: els.endpoint.value,
       model: els.model.value,
+      llmModel: els.llmModel.value,
       apiKey: els.apiKey.value,
     }));
   } catch (_) { /* storage unavailable (private mode etc.) — page still works */ }
@@ -222,7 +313,10 @@ function loadSettings() {
       els.preset.value = saved.endpointPreset;
     }
     if (typeof saved.endpoint === "string") els.endpoint.value = saved.endpoint;
-    if (typeof saved.model === "string" && saved.model) els.model.value = saved.model;
+    if (typeof saved.model === "string" &&
+        [...els.model.options].some((o) => o.value === saved.model)) els.model.value = saved.model;
+    if (typeof saved.llmModel === "string" &&
+        [...els.llmModel.options].some((o) => o.value === saved.llmModel)) els.llmModel.value = saved.llmModel;
     if (typeof saved.apiKey === "string") els.apiKey.value = saved.apiKey;
   }
   updateCustomVisibility();
@@ -235,6 +329,7 @@ function forgetSettings() {
   // Reset the rest to defaults so a reload also comes back clean.
   els.preset.selectedIndex = 0;
   els.model.value = "clef:cloud";
+  els.llmModel.value = "gpt-oss:120b";
   updateCustomVisibility();
   const status = document.getElementById("forgetStatus");
   if (status) status.textContent = "Saved key and settings forgotten.";
@@ -258,12 +353,26 @@ fetch("/healthz").then((r) => r.json()).then((h) => {
   }
 }).catch(() => {});
 
-for (const el of [els.preset, els.endpoint, els.model, els.apiKey]) {
+for (const el of [els.preset, els.endpoint, els.model, els.llmModel, els.apiKey]) {
   el.addEventListener("input", () => { updateCustomVisibility(); saveSettings(); });
   el.addEventListener("change", () => { updateCustomVisibility(); saveSettings(); });
 }
 
 document.getElementById("forgetKey").addEventListener("click", forgetSettings);
+
+document.getElementById("pgCompare").addEventListener("click", async (e) => {
+  const button = e.target;
+  const results = document.getElementById("pgResults");
+  button.disabled = true;
+  try {
+    const questions = JSON.parse(document.getElementById("pgQuestions").value);
+    await runCompare(results, document.getElementById("pgState").value, questions);
+  } catch (err) {
+    results.innerHTML = `<div class="error">${err.message.replace(/</g, "&lt;")}</div>`;
+  } finally {
+    button.disabled = false;
+  }
+});
 
 document.getElementById("pgRun").addEventListener("click", async (e) => {
   const button = e.target;

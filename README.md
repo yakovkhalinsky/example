@@ -31,10 +31,16 @@ cp .env.example .env   # put OLLAMA_API_KEY=... in .env (git-ignored)
 node server.js         # serves docs/ and proxies /v1/systemone, port 8000
 ```
 
-Open the page it serves and pick *Node server — same origin* as the
-endpoint (auto-selected when the server answers), model `clef:cloud`,
-leave the page's key field blank. Editing `.env` takes effect without a
-restart — the server re-reads it per request. No dependencies; Node 18+.
+Open the page it serves — in server mode the Connection section is
+hidden entirely (endpoint and key are the server's `.env`), leaving a
+Models bar: a dropdown of the System One models verified against
+Ollama Cloud (`clef:cloud`, `clef-flash:cloud`, `clef:27b`, `clef`,
+`clef-flash`) and a dropdown of normal LLMs. Every example also has a
+*Compare with LLM* button that runs the same state and questions
+through both, side by side, with timing and token counts — the server
+proxies `/v1/chat/completions` for the LLM side as well. Editing
+`.env` takes effect without a restart — the server re-reads it per
+request. No dependencies; Node 18+.
 
 ## Start here
 
