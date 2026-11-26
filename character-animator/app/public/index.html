@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Character Animator — a three.js skeleton, skinning &amp; keyframes toy</title>
+<meta name="description" content="A Blender-style character animator in the browser: a procedurally built skinned humanoid, bone posing with a gizmo, a weights view, and a keyframe timeline with presets.">
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="style.css">
+<script type="importmap">
+{
+  "imports": {
+    "three": "./vendor/three.module.js",
+    "three/addons/controls/OrbitControls.js": "./vendor/OrbitControls.js",
+    "three/addons/controls/TransformControls.js": "./vendor/TransformControls.js"
+  }
+}
+</script>
+</head>
+<body>
+
+<header class="topbar">
+  <h1>Character Animator</h1>
+  <p class="lede">A Blender-style rig in the browser: skeleton, skinned mesh,
+  pose mode, and a keyframe timeline — all procedural, no model files.
+  Click a bone in the viewport or the outliner, drag the gizmo (or the
+  sliders) to pose, key it, play it back.</p>
+</header>
+
+<main class="layout">
+  <aside class="panel outliner-panel">
+    <h2>Outliner — bones</h2>
+    <ul id="outliner" class="tree"></ul>
+    <h2 class="sub">View</h2>
+    <label class="check"><input type="checkbox" id="showSkeleton" checked> Show skeleton</label>
+    <label class="check"><input type="checkbox" id="showWeights"> Show weights for selected bone</label>
+    <label class="check"><input type="checkbox" id="wireframe"> Wireframe overlay</label>
+    <p class="note">In weights view, red vertices follow the selected
+    bone fully; blue ones ignore it. That gradient <em>is</em> the skinning.</p>
+  </aside>
+
+  <section class="viewport-wrap">
+    <div id="viewport"></div>
+    <div class="viewport-hint">Left-drag: orbit · wheel: zoom · right-drag: pan · click character: pick its bone</div>
+  </section>
+
+  <aside class="panel props-panel">
+    <h2>Properties</h2>
+    <p class="note">Selected bone: <strong id="selectedName">— none —</strong></p>
+    <div class="sliders">
+      <label>Rotate X <span id="rxVal">0°</span>
+        <input type="range" id="rx" min="-180" max="180" step="1" value="0"></label>
+      <label>Rotate Y <span id="ryVal">0°</span>
+        <input type="range" id="ry" min="-180" max="180" step="1" value="0"></label>
+      <label>Rotate Z <span id="rzVal">0°</span>
+        <input type="range" id="rz" min="-180" max="180" step="1" value="0"></label>
+    </div>
+    <div class="row">
+      <button id="resetBone" type="button" class="secondary">Reset bone</button>
+      <button id="resetPose" type="button" class="secondary">Reset whole pose</button>
+    </div>
+
+    <h2 class="sub">Preset animations</h2>
+    <div class="row" id="presetRow">
+      <button type="button" data-preset="wave">Wave</button>
+      <button type="button" data-preset="idle">Idle sway</button>
+      <button type="button" data-preset="walk">Walk cycle</button>
+    </div>
+    <p class="note">Loading a preset replaces the timeline's keyframes.</p>
+
+    <h2 class="sub">Save / load</h2>
+    <div class="row">
+      <button id="exportBtn" type="button" class="secondary">Export JSON</button>
+      <button id="importBtn" type="button" class="secondary">Import JSON</button>
+      <input type="file" id="importFile" accept="application/json" hidden>
+    </div>
+    <div class="row">
+      <button id="storeSave" type="button" class="secondary">Save to browser</button>
+      <button id="storeLoad" type="button" class="secondary">Load from browser</button>
+    </div>
+    <p class="note" id="status">Loading three.js…</p>
+  </aside>
+</main>
+
+<section class="timeline panel">
+  <div class="tl-row">
+    <button id="playBtn" type="button">▶ Play</button>
+    <button id="stopBtn" type="button" class="secondary">■ Stop</button>
+    <label class="inline">Time <input type="range" id="scrub" min="0" max="4" step="0.01" value="0"></label>
+    <span id="timeLabel" class="time-label">0.00s / 4.00s</span>
+    <label class="inline">Length <input type="number" id="duration" min="0.5" max="30" step="0.1" value="4"> s</label>
+    <label class="check inline"><input type="checkbox" id="loop" checked> Loop</label>
+    <button id="addKey" type="button">◆ Key pose at current time</button>
+    <button id="clearKeys" type="button" class="secondary">Clear keys</button>
+  </div>
+  <div id="keyTrack" class="key-track" title="Click a marker to jump to that keyframe"></div>
+  <ul id="keyList" class="key-list"></ul>
+</section>
+
+<footer>
+  <p>Character Animator — an example in the <code>example</code> repo. three.js
+  r160 is vendored in <code>app/public/vendor/</code>, so it runs offline from a
+  fresh checkout. The character is generated in code (<code>js/rig.js</code>);
+  there are no model files.</p>
+</footer>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,1 @@
+{"description":"Character Animator: a three.js skinned humanoid with a Blender-style skeleton, pose mode and keyframe timeline. Zero-dependency Node server; three.js is vendored.","engines":{"node":">=18"},"name":"character-animator-app","private":true,"scripts":{"start":"node server.js"},"version":"1.0.0"}
