@@ -36,7 +36,7 @@ hidden entirely (endpoint and key are the server's `.env`), leaving a
 Models bar: a dropdown of the System One models verified against
 Ollama Cloud (`clef:cloud`, `clef-flash:cloud`, `clef:27b`, `clef`,
 `clef-flash`) and a dropdown of normal LLMs. Every example also has a
-*Compare with LLM* button that runs the same state and questions
+single *Run decision* button that runs the same state and questions
 through both, side by side, with timing and token counts — the server
 proxies `/v1/chat/completions` for the LLM side as well. Editing
 `.env` takes effect without a restart — the server re-reads it per

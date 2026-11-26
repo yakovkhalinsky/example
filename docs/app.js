@@ -82,24 +82,24 @@ async function askLLM(state, questions) {
 
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;");
 
-function renderCompare(so, llm) {
+function renderCompare(so, llm, afterFn) {
   const soUsage = so.usage ? `${so.usage.input_tokens ?? "?"} in / ${so.usage.output_tokens ?? 0} out tokens` : "tokens n/a";
   const llmUsage = llm.usage ? `${llm.usage.prompt_tokens ?? llm.usage.input_tokens ?? "?"} in / ${llm.usage.completion_tokens ?? llm.usage.output_tokens ?? "?"} out tokens` : "tokens n/a";
   return `<div class="compare">
     <div class="side"><h3>Decision model — ${esc(so.model)}</h3>
       <p class="note">${so.ms} ms · ${soUsage} · probabilities, no generated text</p>
-      ${renderAnswers(so.answers)}</div>
+      ${renderAnswers(so.answers)}${afterFn ? afterFn(so.answers) : ""}</div>
     <div class="side"><h3>Normal LLM — ${esc(llm.model)}</h3>
       <p class="note">${llm.ms} ms · ${llmUsage} · generated text</p>
       <pre class="raw">${esc(llm.text)}</pre></div>
   </div>`;
 }
 
-async function runCompare(resultsEl, state, questions) {
+async function runCompare(resultsEl, state, questions, afterFn) {
   resultsEl.innerHTML = `<p class="note">Asking both models…</p>`;
   const [so, llm] = await Promise.allSettled([decideFull(state, questions), askLLM(state, questions)]);
   if (so.status === "fulfilled" && llm.status === "fulfilled") {
-    resultsEl.innerHTML = renderCompare(so.value, llm.value);
+    resultsEl.innerHTML = renderCompare(so.value, llm.value, afterFn);
   } else {
     const err = (r) => r.status === "rejected" ? `<div class="error">${esc(r.reason.message)}</div>` : "";
     const ok = (r, label) => r.status === "fulfilled"
@@ -238,35 +238,23 @@ EXAMPLES.forEach((ex, i) => {
     <label>State<textarea class="state" rows="${ex.stateIsJson ? 9 : 4}">${ex.state.replace(/&/g, "&amp;").replace(/</g, "&lt;")}</textarea></label>
     <p class="qsummary">Questions: ${qSummary}</p>
     <button class="runBtn">Run decision</button>
-    <button class="compareBtn">Compare with LLM</button>
     <div class="results"></div>`;
   const button = section.querySelector(".runBtn");
-  const compareButton = section.querySelector(".compareBtn");
   const results = section.querySelector(".results");
   const getState = () => {
     const raw = section.querySelector(".state").value;
     return ex.stateIsJson ? JSON.parse(raw) : raw;
   };
+  // One button runs BOTH models side by side: the decision model and
+  // the selected normal LLM, on the same state and questions.
   button.addEventListener("click", async () => {
     button.disabled = true;
-    results.innerHTML = `<p class="note">Deciding…</p>`;
     try {
-      const answers = await decide(getState(), ex.questions);
-      results.innerHTML = renderAnswers(answers) + (ex.after ? ex.after(answers) : "");
+      await runCompare(results, getState(), ex.questions, ex.after);
     } catch (e) {
       results.innerHTML = `<div class="error">${e.message.replace(/</g, "&lt;")}</div>`;
     } finally {
       button.disabled = false;
-    }
-  });
-  compareButton.addEventListener("click", async () => {
-    compareButton.disabled = true;
-    try {
-      await runCompare(results, getState(), ex.questions);
-    } catch (e) {
-      results.innerHTML = `<div class="error">${e.message.replace(/</g, "&lt;")}</div>`;
-    } finally {
-      compareButton.disabled = false;
     }
   });
   main.appendChild(section);
@@ -360,29 +348,13 @@ for (const el of [els.preset, els.endpoint, els.model, els.llmModel, els.apiKey]
 
 document.getElementById("forgetKey").addEventListener("click", forgetSettings);
 
-document.getElementById("pgCompare").addEventListener("click", async (e) => {
+document.getElementById("pgRun").addEventListener("click", async (e) => {
   const button = e.target;
   const results = document.getElementById("pgResults");
   button.disabled = true;
   try {
     const questions = JSON.parse(document.getElementById("pgQuestions").value);
     await runCompare(results, document.getElementById("pgState").value, questions);
-  } catch (err) {
-    results.innerHTML = `<div class="error">${err.message.replace(/</g, "&lt;")}</div>`;
-  } finally {
-    button.disabled = false;
-  }
-});
-
-document.getElementById("pgRun").addEventListener("click", async (e) => {
-  const button = e.target;
-  const results = document.getElementById("pgResults");
-  button.disabled = true;
-  results.innerHTML = `<p class="note">Deciding…</p>`;
-  try {
-    const questions = JSON.parse(document.getElementById("pgQuestions").value);
-    const answers = await decide(document.getElementById("pgState").value, questions);
-    results.innerHTML = renderAnswers(answers);
   } catch (err) {
     results.innerHTML = `<div class="error">${err.message.replace(/</g, "&lt;")}</div>`;
   } finally {
