@@ -14,7 +14,7 @@ question in a single forward pass**. You get back probabilities, not prose:
 No output tokens, no JSON-mode pleading, no parsing. Just numbers your code
 can threshold on: *if confidence < 0.6, hand it to a human.*
 
-This repo is five small, runnable examples against **Ollama Cloud**
+This folder is five small, runnable examples against **Ollama Cloud**
 (`clef:cloud` — Cloudflare's Clef, a 27B decision model fine-tuned from
 Qwen, hosted by Ollama). The same code runs unchanged against a local
 Ollama daemon serving Clef, Clef-Flash, or a community Jev model such as
@@ -42,10 +42,10 @@ python3 01_ticket_triage.py
 Configuration is all environment variables (see `.env.example`):
 `OLLAMA_HOST`, `OLLAMA_API_KEY`, and `JEV_MODEL` (default `clef:cloud`).
 
-Or run the whole demo end to end:
+Or run all five examples end to end:
 
 ```bash
-./demo.sh
+./run_all.sh
 ```
 
 ## The examples

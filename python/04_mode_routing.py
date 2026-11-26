@@ -12,10 +12,6 @@ and a low-confidence answer can itself be the signal to escalate.
 used with clef:cloud in production.)
 """
 
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parent))
 from jev import decide, show_choice
 
 QUESTIONS = {

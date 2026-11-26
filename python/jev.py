@@ -15,8 +15,9 @@ Configuration (environment variables):
     OLLAMA_API_KEY Your Ollama Cloud API key (required for ollama.com,
                    not needed for a local daemon).
     JEV_MODEL      Model to call. Default: clef:cloud
-                   Other options: clef (local), clef-flash (local),
-                   actbro/minicpm5-2b-jev (local Jev model).
+                   Verified on Ollama Cloud: clef:cloud, clef-flash:cloud,
+                   clef:27b, clef, clef-flash. Local-only alternative:
+                   actbro/minicpm5-2b-jev (via a daemon).
 """
 
 from __future__ import annotations
